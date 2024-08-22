@@ -1,8 +1,8 @@
 /* eslint-disable linebreak-style */
 import React from "react";
 import { useAuth0 } from "@auth0/auth0-react";
-import LoginPage from "./loginPage"; // Importe a página de login
-import Dashboard from "./dashboard"; // Importe o Dashboard
+import LoginPage from "./LoginPage"; // Importe a página de login
+import Dashboard from "./Dashboard"; // Importe o Dashboard
 
 function App() {
   const { isAuthenticated, isLoading } = useAuth0(); // Use o hook useAuth0 para autenticação

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
+import styled from "styled-components";
 
 // Paleta de Cores Verdes
 const colors = {
@@ -12,69 +13,72 @@ const colors = {
   hover: "#1e6f46", // Cor ao passar o mouse sobre o botão
 };
 
-const styles = {
-  container: {
-    display: "flex",
-    flexDirection: "column" as "column",
-    justifyContent: "center",
-    alignItems: "center",
-    minHeight: "100vh",
-    backgroundColor: colors.background,
-    fontFamily: "Arial, sans-serif",
-    padding: "1rem",
-  },
-  box: {
-    backgroundColor: colors.primary,
-    padding: "2rem",
-    borderRadius: "10px",
-    textAlign: "center" as "center",
-    boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
-    maxWidth: "90%", // Ajuste para telas menores
-    width: "400px",  // Tamanho máximo da caixa
-  },
-  heading: {
-    color: colors.textPrimary,
-    marginBottom: "1rem",
-    fontSize: "1.5rem",
-  },
-  button: {
-    backgroundColor: colors.secondary,
-    color: colors.textPrimary,
-    padding: "0.75rem 1.5rem",
-    borderRadius: "5px",
-    border: "none",
-    fontSize: "1rem",
-    cursor: "pointer",
-    marginTop: "1rem",
-    transition: "background-color 0.3s ease",
-    width: "100%", // Largura total em dispositivos móveis
-    maxWidth: "200px",
-  },
-  profileImage: {
-    borderRadius: "50%",
-    width: "100px",
-    height: "100px",
-    marginBottom: "1rem",
-  },
-  text: {
-    color: colors.textPrimary,
-    fontSize: "1.2rem",
-  },
-  // Media queries para telas menores
-  "@media (max-width: 600px)": {
-    heading: {
-      fontSize: "1.2rem",
-    },
-    box: {
-      padding: "1.5rem",
-      width: "100%",
-    },
-    button: {
-      fontSize: "0.9rem",
-      padding: "0.6rem 1rem",
-    },
+// Estilização com styled-components
+const Container = styled.div`
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-color: ${colors.background};
+  font-family: Arial, sans-serif;
+  padding: 1rem;
+`;
+
+const Box = styled.div`
+  background-color: ${colors.primary};
+  padding: 2rem;
+  border-radius: 10px;
+  text-align: center;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  max-width: 90%; // Ajuste para telas menores
+  width: 400px;  // Tamanho máximo da caixa
+
+  @media (max-width: 600px) {
+    padding: 1.5rem;
+    width: 100%;
   }
-};
+`;
+
+const Heading = styled.h2`
+  color: ${colors.textPrimary};
+  margin-bottom: 1rem;
+  font-size: 1.5rem;
+
+  @media (max-width: 600px) {
+    font-size: 1.2rem;
+  }
+`;
+
+const Button = styled.button`
+  background-color: ${colors.secondary};
+  color: ${colors.textPrimary};
+  padding: 0.75rem 1.5rem;
+  border-radius: 5px;
+  border: none;
+  font-size: 1rem;
+  cursor: pointer;
+  margin-top: 1rem;
+  transition: background-color 0.3s ease;
+  width: 100%; // Largura total em dispositivos móveis
+  max-width: 200px;
+
+  &:hover {
+    background-color: ${colors.hover};
+  }
+`;
+
+const ProfileImage = styled.img`
+  border-radius: 50%;
+  width: 100px;
+  height: 100px;
+  margin-bottom: 1rem;
+`;
+
+const Text = styled.p`
+  color: ${colors.textPrimary};
+  font-size: 1.2rem;
+`;
 
 const LoginPage = () => {
   const { loginWithRedirect, logout, user, isAuthenticated, isLoading } = useAuth0();
@@ -92,43 +96,34 @@ const LoginPage = () => {
 
   if (isLoading) {
     return (
-      <div style={styles.container}>
-        <div style={styles.text}>Carregando...</div>
-      </div>
+      <Container>
+        <Text>Carregando...</Text>
+      </Container>
     );
   }
 
   return (
-    <div style={styles.container}>
+    <Container>
       {!isAuthenticated ? (
-        <div style={styles.box}>
-          <h2 style={styles.heading}>Faça login para continuar</h2>
-          <button
-            style={{
-              ...styles.button,
-              backgroundColor: isHovering ? colors.hover : colors.secondary, // Muda a cor ao passar o mouse
-            }}
+        <Box>
+          <Heading>Faça login para continuar</Heading>
+          <Button
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
             onClick={() => loginWithRedirect()}
           >
             Login
-          </button>
-        </div>
+          </Button>
+        </Box>
       ) : (
-        <div style={styles.box}>
-          <h2 style={styles.heading}>Bem-vindo, {user?.name}</h2>
-          <img
+        <Box>
+          <Heading>Bem-vindo, {user?.name}</Heading>
+          <ProfileImage
             src={user?.picture}
             alt="Profile"
-            style={styles.profileImage}
           />
-          <p style={styles.text}>Email: {user?.email}</p>
-          <button
-            style={{
-              ...styles.button,
-              backgroundColor: isHovering ? colors.hover : colors.secondary, // Muda a cor ao passar o mouse
-            }}
+          <Text>Email: {user?.email}</Text>
+          <Button
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
             onClick={() => {
@@ -137,10 +132,10 @@ const LoginPage = () => {
             }}
           >
             Logout
-          </button>
-        </div>
+          </Button>
+        </Box>
       )}
-    </div>
+    </Container>
   );
 };
 
