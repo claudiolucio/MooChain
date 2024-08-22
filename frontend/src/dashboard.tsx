@@ -1,8 +1,10 @@
 import React, { useState } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import { ethers } from "ethers";
+import styled from "styled-components";
 import CreateVakinhaModal from "./CreateVakinhaModal";
 
+// Paleta de Cores
 const colors = {
   background: "#f0f4f8",
   primary: "#4caf50",
@@ -15,152 +17,136 @@ const colors = {
   darkBackground: "#2c3e50",
 };
 
-const styles = {
-  container: {
-    padding: "20px",
-    backgroundColor: colors.background,
-    minHeight: "100vh",
-    fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-  },
-  header: {
-    width: "100%",
-    maxWidth: "800px",
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: "20px",
-    padding: "10px 20px",
-    backgroundColor: colors.darkBackground,
-    borderRadius: "8px",
-    color: colors.lightText,
-  },
-  heading: {
-    margin: 0,
-    fontSize: "24px",
-    fontWeight: "bold",
-  },
-  button: {
-    padding: "10px 20px",
-    backgroundColor: colors.primary,
-    color: colors.lightText,
-    border: "none",
-    borderRadius: "4px",
-    cursor: "pointer",
-    transition: "background-color 0.3s",
-    fontSize: "16px",
-  },
-  section: {
-    width: "100%",
-    maxWidth: "800px",
-    marginBottom: "20px",
-    padding: "20px",
-    backgroundColor: colors.cardBackground,
-    borderRadius: "8px",
-    boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.1)",
-    textAlign: "center",
-  },
-  walletInfo: {
-    marginBottom: "10px",
-    fontSize: "18px",
-    fontWeight: "bold",
-  },
-  searchSection: {
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-  },
-  searchInput: {
-    padding: "15px",
-    width: "100%",
-    borderRadius: "8px",
-    border: `1px solid ${colors.border}`,
-    marginBottom: "10px",
-    fontSize: "16px",
-    maxWidth: "600px",
-  },
-  vakinhaList: {
-    width: "100%",
-    maxWidth: "800px",
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
-    gap: "20px",
-    justifyContent: "center",
-  },
-  vakinhaCard: {
-    backgroundColor: colors.cardBackground,
-    padding: "20px",
-    borderRadius: "8px",
-    boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)",
-    cursor: "pointer",
-    transition: "transform 0.2s, box-shadow 0.2s",
-    textAlign: "center",
-  },
-  vakinhaCardHover: {
-    transform: "scale(1.05)",
-    boxShadow: "0px 8px 12px rgba(0, 0, 0, 0.2)",
-  },
-  vakinhaTitle: {
-    fontSize: "20px",
-    marginBottom: "10px",
-    fontWeight: "bold",
-  },
-  vakinhaDescription: {
-    color: colors.text,
-    fontSize: "16px",
-    maxHeight: "40px", // Limita a altura para cerca de duas linhas de texto
-    overflow: "hidden",
-    textOverflow: "ellipsis",
-    display: "-webkit-box",
-    WebkitLineClamp: 2, // Limita a exibição a 2 linhas
-    WebkitBoxOrient: "vertical",
-    lineHeight: "1.5", // Ajusta a altura da linha para melhor visualização
-  },
-  modalOverlay: {
-    position: "fixed",
-    top: 0,
-    left: 0,
-    width: "100%",
-    height: "100%",
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    zIndex: 1000,
-  },
-  modalContent: {
-    backgroundColor: "#fff",
-    padding: "20px",
-    borderRadius: "8px",
-    width: "90%",
-    maxWidth: "500px",
-    textAlign: "center",
-    display: "flex",
-    flexDirection: "column",
-    justifyContent: "center",
-  },
-  modalInput: {
-    width: "100%",
-    padding: "10px",
-    marginBottom: "10px",
-    borderRadius: "4px",
-    border: `1px solid ${colors.border}`,
-  },
-  modalTextArea: {
-    width: "100%",
-    padding: "10px",
-    height: "80px",
-    marginBottom: "10px",
-    borderRadius: "4px",
-    border: `1px solid ${colors.border}`,
-  },
-  modalActions: {
-    display: "flex",
-    justifyContent: "space-around",
-  },
-};
+// Estilização com styled-components
+const Container = styled.div`
+  padding: 20px;
+  background-color: ${colors.background};
+  min-height: 100vh;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+`;
+
+const Header = styled.header`
+  width: 100%;
+  max-width: 800px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding: 10px 20px;
+  background-color: ${colors.darkBackground};
+  border-radius: 8px;
+  color: ${colors.lightText};
+`;
+
+const Heading = styled.h1`
+  margin: 0;
+  font-size: 24px;
+  font-weight: bold;
+`;
+
+const Button = styled.button`
+  padding: 10px 20px;
+  background-color: ${colors.primary};
+  color: ${colors.lightText};
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.3s;
+  &:hover {
+    background-color: ${colors.hover};
+  }
+`;
+
+const Section = styled.section`
+  width: 100%;
+  max-width: 800px;
+  margin-bottom: 20px;
+  padding: 20px;
+  background-color: ${colors.cardBackground};
+  border-radius: 8px;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+  text-align: center;
+`;
+
+const WalletInfo = styled.p`
+  margin-bottom: 10px;
+  font-size: 18px;
+  font-weight: bold;
+`;
+
+const SearchSection = styled(Section)`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+`;
+
+const SearchInput = styled.input`
+  padding: 15px;
+  width: 100%;
+  border-radius: 8px;
+  border: 1px solid ${colors.border};
+  margin-bottom: 10px;
+  font-size: 16px;
+  max-width: 600px;
+`;
+
+const VakinhaList = styled.section`
+  width: 100%;
+  max-width: 800px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+  justify-content: center;
+`;
+
+const VakinhaCard = styled.div`
+  background-color: ${colors.cardBackground};
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  text-align: center;
+  transition: transform 0.2s, box-shadow 0.2s;
+  &:hover {
+    transform: scale(1.05);
+    box-shadow: 0px 8px 12px rgba(0, 0, 0, 0.2);
+  }
+`;
+
+const VakinhaTitle = styled.h3`
+  font-size: 20px;
+  margin-bottom: 10px;
+  font-weight: bold;
+`;
+
+const VakinhaDescription = styled.p`
+  color: ${colors.text};
+  font-size: 16px;
+  max-height: 40px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  line-height: 1.5;
+`;
+
+const ModalOverlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+`;
 
 const Dashboard = () => {
   const { logout } = useAuth0();
@@ -206,84 +192,58 @@ const Dashboard = () => {
   };
 
   return (
-    <div style={styles.container}>
-      <header style={styles.header}>
-        <h1 style={styles.heading}>Vakinha Blockchain</h1>
-        <button
-          style={styles.button}
-          onClick={() => logout()}
-          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = colors.hover)}
-          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = colors.primary)}
-        >
-          Logout
-        </button>
-      </header>
+    <Container>
+      <Header>
+        <Heading>Vakinha Blockchain</Heading>
+        <Button onClick={() => logout()}>Logout</Button>
+      </Header>
 
-      <section style={styles.section}>
+      <Section>
         {walletAddress ? (
           <div>
-            <p style={styles.walletInfo}>Carteira conectada: {walletAddress}</p>
-            <button
-              style={styles.button}
-              onClick={() => setIsModalOpen(true)}
-              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = colors.hover)}
-              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = colors.primary)}
-            >
-              Criar Nova Vakinha
-            </button>
+            <WalletInfo>Carteira conectada: {walletAddress}</WalletInfo>
+            <Button onClick={() => setIsModalOpen(true)}>Criar Nova Vakinha</Button>
           </div>
         ) : (
-          <button
-            style={styles.button}
-            onClick={connectWallet}
-            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = colors.hover)}
-            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = colors.primary)}
-          >
-            Conectar MetaMask
-          </button>
+          <Button onClick={connectWallet}>Conectar MetaMask</Button>
         )}
-      </section>
+      </Section>
 
-      <section style={{ ...styles.section, ...styles.searchSection }}>
-        <input
+      <SearchSection>
+        <SearchInput
           type="text"
           placeholder="Pesquisar vakinhas..."
           value={searchQuery}
           onChange={handleSearchChange}
-          style={styles.searchInput}
         />
-      </section>
+      </SearchSection>
 
-      <section style={styles.vakinhaList}>
+      <VakinhaList>
         {filteredVakinhas.length > 0 ? (
           filteredVakinhas.map((vakinha) => (
-            <div
+            <VakinhaCard
               key={vakinha.id}
-              style={{
-                ...styles.vakinhaCard,
-                ...(hoverCard === vakinha.id ? styles.vakinhaCardHover : {}),
-              }}
               onMouseEnter={() => setHoverCard(vakinha.id)}
               onMouseLeave={() => setHoverCard(null)}
             >
-              <h3 style={styles.vakinhaTitle}>{vakinha.nome}</h3>
-              <p style={styles.vakinhaDescription}>{vakinha.descricao}</p>
-            </div>
+              <VakinhaTitle>{vakinha.nome}</VakinhaTitle>
+              <VakinhaDescription>{vakinha.descricao}</VakinhaDescription>
+            </VakinhaCard>
           ))
         ) : (
           <p>Nenhuma vakinha encontrada</p>
         )}
-      </section>
+      </VakinhaList>
 
       {isModalOpen && (
-        <div style={styles.modalOverlay}>
+        <ModalOverlay>
           <CreateVakinhaModal
             onClose={() => setIsModalOpen(false)}
             onCreate={createVakinhaOnBlockchain}
           />
-        </div>
+        </ModalOverlay>
       )}
-    </div>
+    </Container>
   );
 };
 
