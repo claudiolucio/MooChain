@@ -61,7 +61,7 @@ const styles = {
     fontSize: "1.2rem",
   },
   // Media queries para telas menores
-  '@media (max-width: 600px)': {
+  "@media (max-width: 600px)": {
     heading: {
       fontSize: "1.2rem",
     },
