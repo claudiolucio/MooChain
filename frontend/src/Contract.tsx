@@ -1,3 +1,4 @@
+/* eslint-disable linebreak-style */
 import { useReadCounterI, useWriteCounterDec, useWriteCounterInc } from "./generated";
 
 const Contract = () => {

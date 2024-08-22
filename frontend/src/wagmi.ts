@@ -1,3 +1,4 @@
+/* eslint-disable linebreak-style */
 import { http, createConfig } from "wagmi";
 import { hardhat, sepolia } from "wagmi/chains";
 
