@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import { ethers } from "ethers";
-import CreateVakinhaModal from "./CreatVakinhaModal";
+import CreateVakinhaModal from "./CreateVakinhaModal";
 
 const colors = {
   background: "#f0f4f8",
@@ -79,7 +79,7 @@ const styles = {
     border: `1px solid ${colors.border}`,
     marginBottom: "10px",
     fontSize: "16px",
-    maxWidth: "600px", // Limitar a largura máxima do input
+    maxWidth: "600px",
   },
   vakinhaList: {
     width: "100%",
@@ -87,7 +87,7 @@ const styles = {
     display: "grid",
     gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
     gap: "20px",
-    justifyContent: "center", // Centralizar os cards horizontalmente
+    justifyContent: "center",
   },
   vakinhaCard: {
     backgroundColor: colors.cardBackground,
@@ -110,6 +110,13 @@ const styles = {
   vakinhaDescription: {
     color: colors.text,
     fontSize: "16px",
+    maxHeight: "40px", // Limita a altura para cerca de duas linhas de texto
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    display: "-webkit-box",
+    WebkitLineClamp: 2, // Limita a exibição a 2 linhas
+    WebkitBoxOrient: "vertical",
+    lineHeight: "1.5", // Ajusta a altura da linha para melhor visualização
   },
   modalOverlay: {
     position: "fixed",
@@ -121,6 +128,7 @@ const styles = {
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
+    zIndex: 1000,
   },
   modalContent: {
     backgroundColor: "#fff",
@@ -129,6 +137,9 @@ const styles = {
     width: "90%",
     maxWidth: "500px",
     textAlign: "center",
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "center",
   },
   modalInput: {
     width: "100%",
@@ -155,19 +166,18 @@ const Dashboard = () => {
   const { logout } = useAuth0();
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [hoverCard, setHoverCard] = useState<number | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-
-  const vakinhas = [
+  const [vakinhaList, setVakinhaList] = useState([
     { id: 1, nome: "Vakinha 1", descricao: "Ajude a Vakinha 1" },
     { id: 2, nome: "Vakinha 2", descricao: "Ajude a Vakinha 2" },
-  ];
+  ]);
+  const [hoverCard, setHoverCard] = useState<number | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
   };
 
-  const filteredVakinhas = vakinhas.filter((vakinha) =>
+  const filteredVakinhas = vakinhaList.filter((vakinha) =>
     vakinha.nome.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -185,8 +195,13 @@ const Dashboard = () => {
     }
   };
 
-  const createVakinhaOnBlockchain = async (nome: string, descricao: string, objetivo: number, duracao: number) => {
-    // Aqui você deve adicionar o código para interagir com o contrato inteligente na blockchain.
+  const createVakinhaOnBlockchain = (nome: string, descricao: string, objetivo: number, duracao: number) => {
+    const newVakinha = {
+      id: vakinhaList.length + 1,
+      nome,
+      descricao,
+    };
+    setVakinhaList([...vakinhaList, newVakinha]);
     console.log("Vakinha criada:", { nome, descricao, objetivo, duracao });
   };
 
@@ -261,10 +276,12 @@ const Dashboard = () => {
       </section>
 
       {isModalOpen && (
-        <CreateVakinhaModal
-          onClose={() => setIsModalOpen(false)}
-          onCreate={createVakinhaOnBlockchain}
-        />
+        <div style={styles.modalOverlay}>
+          <CreateVakinhaModal
+            onClose={() => setIsModalOpen(false)}
+            onCreate={createVakinhaOnBlockchain}
+          />
+        </div>
       )}
     </div>
   );
