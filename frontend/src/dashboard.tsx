@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import { ethers } from "ethers";
+import CreateVakinhaModal from "./CreatVakinhaModal";
 
 const colors = {
   background: "#f0f4f8",
@@ -110,6 +111,44 @@ const styles = {
     color: colors.text,
     fontSize: "16px",
   },
+  modalOverlay: {
+    position: "fixed",
+    top: 0,
+    left: 0,
+    width: "100%",
+    height: "100%",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContent: {
+    backgroundColor: "#fff",
+    padding: "20px",
+    borderRadius: "8px",
+    width: "90%",
+    maxWidth: "500px",
+    textAlign: "center",
+  },
+  modalInput: {
+    width: "100%",
+    padding: "10px",
+    marginBottom: "10px",
+    borderRadius: "4px",
+    border: `1px solid ${colors.border}`,
+  },
+  modalTextArea: {
+    width: "100%",
+    padding: "10px",
+    height: "80px",
+    marginBottom: "10px",
+    borderRadius: "4px",
+    border: `1px solid ${colors.border}`,
+  },
+  modalActions: {
+    display: "flex",
+    justifyContent: "space-around",
+  },
 };
 
 const Dashboard = () => {
@@ -117,6 +156,7 @@ const Dashboard = () => {
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [hoverCard, setHoverCard] = useState<number | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const vakinhas = [
     { id: 1, nome: "Vakinha 1", descricao: "Ajude a Vakinha 1" },
@@ -145,8 +185,9 @@ const Dashboard = () => {
     }
   };
 
-  const disconnectWallet = () => {
-    setWalletAddress(null);
+  const createVakinhaOnBlockchain = async (nome: string, descricao: string, objetivo: number, duracao: number) => {
+    // Aqui você deve adicionar o código para interagir com o contrato inteligente na blockchain.
+    console.log("Vakinha criada:", { nome, descricao, objetivo, duracao });
   };
 
   return (
@@ -169,11 +210,11 @@ const Dashboard = () => {
             <p style={styles.walletInfo}>Carteira conectada: {walletAddress}</p>
             <button
               style={styles.button}
-              onClick={disconnectWallet}
+              onClick={() => setIsModalOpen(true)}
               onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = colors.hover)}
               onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = colors.primary)}
             >
-              Desconectar Carteira
+              Criar Nova Vakinha
             </button>
           </div>
         ) : (
@@ -196,13 +237,6 @@ const Dashboard = () => {
           onChange={handleSearchChange}
           style={styles.searchInput}
         />
-        <button
-          style={styles.button}
-          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = colors.hover)}
-          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = colors.primary)}
-        >
-          Criar Nova Vakinha
-        </button>
       </section>
 
       <section style={styles.vakinhaList}>
@@ -225,6 +259,13 @@ const Dashboard = () => {
           <p>Nenhuma vakinha encontrada</p>
         )}
       </section>
+
+      {isModalOpen && (
+        <CreateVakinhaModal
+          onClose={() => setIsModalOpen(false)}
+          onCreate={createVakinhaOnBlockchain}
+        />
+      )}
     </div>
   );
 };
