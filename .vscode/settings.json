@@ -1,0 +1,4 @@
+{
+    "solidity.compileUsingRemoteVersion": "latest",
+    "files.eol": "\n"
+}
