@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import { ethers } from "ethers";
+import { useNavigate } from "react-router-dom"; 
 import styled from "styled-components";
 import CreateVakinhaModal from "./CreateVakinhaModal";
 
@@ -167,6 +168,8 @@ const Dashboard = () => {
     vakinha.nome.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const navigate = useNavigate();
+
   const connectWallet = async () => {
     if (window.ethereum) {
       try {
@@ -181,15 +184,26 @@ const Dashboard = () => {
     }
   };
 
-  const createVakinhaOnBlockchain = (nome: string, descricao: string, objetivo: number, duracao: number) => {
+  const createVakinhaOnBlockchain = (nome: string, descricao: string, objetivo: number, duracao: number, creator:string) => {
     const newVakinha = {
       id: vakinhaList.length + 1,
       nome,
       descricao,
+      creator: walletAddress,
     };
     setVakinhaList([...vakinhaList, newVakinha]);
-    console.log("Vakinha criada:", { nome, descricao, objetivo, duracao });
+    console.log("Vakinha criada:", { nome, descricao, objetivo, duracao, creator });
   };
+
+  const manageVakinha = (vakinhaId: number) => {
+    const vakinha = vakinhaList.find(v => v.id === vakinhaId);
+    if (vakinha) {
+      navigate(`/manage-vakinha/${vakinhaId}`);
+    } else {
+      alert("Você não tem permissão para gerenciar esta vakinha.");
+    }
+  };
+  
 
   return (
     <Container>
@@ -228,12 +242,14 @@ const Dashboard = () => {
             >
               <VakinhaTitle>{vakinha.nome}</VakinhaTitle>
               <VakinhaDescription>{vakinha.descricao}</VakinhaDescription>
+              <Button onClick={() => manageVakinha(vakinha.id)}>Gerenciar Vakinha</Button>
             </VakinhaCard>
           ))
         ) : (
           <p>Nenhuma vakinha encontrada</p>
         )}
       </VakinhaList>
+
 
       {isModalOpen && (
         <ModalOverlay>

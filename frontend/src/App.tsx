@@ -1,8 +1,10 @@
 /* eslint-disable linebreak-style */
 import React from "react";
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { useAuth0 } from "@auth0/auth0-react";
-import LoginPage from "./LoginPage"; // Importe a página de login
-import Dashboard from "./Dashboard"; // Importe o Dashboard
+import LoginPage from "./loginPage.tsx"; // Importe a página de login
+import Dashboard from "./dashboard.tsx"; // Importe o Dashboard
+import ManageVakinha from "./ManageVakinha.tsx";
 
 function App() {
   const { isAuthenticated, isLoading } = useAuth0(); // Use o hook useAuth0 para autenticação
@@ -17,8 +19,18 @@ function App() {
     return <LoginPage />;
   }
 
-  // Se o usuário estiver autenticado, mostre o dashboard
-  return <Dashboard />;
+
+  return (
+    <Router>
+      <div>
+        <Routes>
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/manage-vakinha/:vaquinhaId" element={<ManageVakinha />} />
+        </Routes>
+      </div>
+    </Router>
+  );
+  
 }
 
 export default App;
