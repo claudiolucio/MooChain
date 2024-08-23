@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useAccount } from "wagmi";
 import { ethers } from "ethers";
+import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 
 const colors = {
@@ -53,6 +54,7 @@ const Card = styled.div`
     max-width: 400px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     margin-bottom: 20px;
+    position: relative;  
 `;
 
 const CardTitle = styled.h2`
@@ -70,10 +72,11 @@ const Label = styled.label`
 
 const Input = styled.input`
     padding: 10px;
-    width: 100%;
+    width: 70%;
     border-radius: 4px;
     border: 1px solid ${colors.border};
     margin-bottom: 20px;
+    margin-right: 10px;
     font-size: 16px;
 `;
 
@@ -84,13 +87,29 @@ const Button = styled.button`
     border: none;
     border-radius: 4px;
     cursor: pointer;
-    font-size: 16px;
+    font-size: 14px;
     transition: background-color 0.3s;
     &:hover {
         background-color: ${colors.hover};
     }
 `;
 
+const BackButton = styled.button`
+    position: absolute;  
+    top: 10px;          
+    right: 10px;        
+    padding: 10px 20px;
+    background-color: cyan;
+    color: ${colors.lightText};
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s;
+    &:hover {
+        background-color: blue;
+    }
+`;
 const ErrorMessage = styled.p`
     color: red;
     font-size: 16px;
@@ -109,7 +128,7 @@ const vaquinhaAbi = [
     "function getTotalRaised(uint vaquinhaId) public view returns (uint256)",
 ];
 
-const ManageVakinha: React.FC<{ vaquinhaId: number }> = ({ vaquinhaId }) => {
+const ManageVakinha: React.FC<{ vaquinhaId: number, walletAddress: string }> = ({ vaquinhaId, walletAddress }) => {
     const { address: userAddress, isConnected } = useAccount();
     const [withdrawAmount, setWithdrawAmount] = useState<number>(0);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -117,13 +136,19 @@ const ManageVakinha: React.FC<{ vaquinhaId: number }> = ({ vaquinhaId }) => {
     const [creatorAddress, setCreatorAddress] = useState<string | null>(null);
     const [totalRaised, setTotalRaised] = useState<number>(0);
 
-    const vaquinhaAddress = "0xYourContractAddressHere"; // Substitua pelo endereço do seu contrato
+    const navigate = useNavigate();
+    const vaquinhaAddress = walletAddress;
 
     useEffect(() => {
         const fetchData = async () => {
             if (!isConnected || !userAddress) return;
 
             try {
+                if (typeof window.ethereum === "undefined") {
+                    setErrorMessage("MetaMask is not installed. Please install it to use this feature.");
+                    return;
+                }
+
                 const provider = new ethers.providers.Web3Provider(window.ethereum);
                 const vaquinhaContract = new ethers.Contract(vaquinhaAddress, vaquinhaAbi, provider);
 
@@ -131,14 +156,14 @@ const ManageVakinha: React.FC<{ vaquinhaId: number }> = ({ vaquinhaId }) => {
                 setCreatorAddress(creator);
 
                 const raised = await vaquinhaContract.getTotalRaised(vaquinhaId);
-                setTotalRaised(ethers.utils.formatEther(raised)); // Formata o valor para ether
+                setTotalRaised(Number(ethers.utils.formatEther(raised)));
             } catch (error) {
-                setErrorMessage("Failed to fetch data: " + (error.message || "Unknown error"));
+                setErrorMessage("Failed to fetch data: " + (error as Error).message);
             }
         };
 
         fetchData();
-    }, [vaquinhaId, isConnected, userAddress]);
+    }, [vaquinhaId, isConnected, userAddress, vaquinhaAddress]);
 
     const handleWithdraw = async () => {
         try {
@@ -163,9 +188,13 @@ const ManageVakinha: React.FC<{ vaquinhaId: number }> = ({ vaquinhaId }) => {
             setSuccessMessage("Withdrawal successful!");
             setErrorMessage(null);
         } catch (error) {
-            setErrorMessage("Withdrawal failed: " + (error.message || "Unknown error"));
+            setErrorMessage("Withdrawal failed: " + (error as Error).message);
             setSuccessMessage(null);
         }
+    };
+
+    const handleBack = () => {
+        navigate(-1);
     };
 
     return (
@@ -174,6 +203,7 @@ const ManageVakinha: React.FC<{ vaquinhaId: number }> = ({ vaquinhaId }) => {
                 <Heading>Gerencie sua Vakinha</Heading>
             </Header>
             <Card>
+                <BackButton onClick={handleBack}>Voltar</BackButton>
                 <CardTitle>Sua Vakinha: {vaquinhaId}</CardTitle>
                 {creatorAddress && <p>Creator Address: {creatorAddress}</p>}
                 <p><strong>Valor Arrecadado:</strong> {totalRaised} ETH</p>

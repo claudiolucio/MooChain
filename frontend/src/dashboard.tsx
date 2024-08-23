@@ -4,6 +4,7 @@ import { ethers } from "ethers";
 import { useNavigate } from "react-router-dom"; 
 import styled from "styled-components";
 import CreateVakinhaModal from "./CreateVakinhaModal";
+import { useEffect } from "react";
 
 // Paleta de Cores
 const colors = {
@@ -184,16 +185,25 @@ const Dashboard = () => {
     }
   };
 
-  const createVakinhaOnBlockchain = (nome: string, descricao: string, objetivo: number, duracao: number, creator:string) => {
+  const createVakinhaOnBlockchain = (nome: string, descricao: string, objetivo: number, duracao: number, creator: string) => {
     const newVakinha = {
       id: vakinhaList.length + 1,
       nome,
       descricao,
       creator: walletAddress,
     };
-    setVakinhaList([...vakinhaList, newVakinha]);
-    console.log("Vakinha criada:", { nome, descricao, objetivo, duracao, creator });
+    const updatedVakinhaList = [...vakinhaList, newVakinha];
+    setVakinhaList(updatedVakinhaList);
+    localStorage.setItem("vakinhaList", JSON.stringify(updatedVakinhaList));
   };
+  
+  useEffect(() => {
+    const storedVakinhaList = localStorage.getItem("vakinhaList");
+    if (storedVakinhaList) {
+      setVakinhaList(JSON.parse(storedVakinhaList));
+    }
+  }, []);
+  
 
   const manageVakinha = (vakinhaId: number) => {
     const vakinha = vakinhaList.find(v => v.id === vakinhaId);
