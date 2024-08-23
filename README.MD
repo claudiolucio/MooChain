@@ -13,7 +13,7 @@ Aqui, temos o template inicial do hardhat. Para realizar o ciclo completo do con
 1. Desenvolver os contratos na pasta `contracts` e, em sequência, construir os testes, que estão localizados na pasta `hardhat/test`. Para executar os testes, basta:
 
    ```bash
-   npx hardhat run test
+   npx hardhat test
    ```
 
 2. Agora, para realizar o deploy do contrato, é necessário definir a rede. Se for a rede local, primeiro certifique-se de que ela está em funcionamento:
