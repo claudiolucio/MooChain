@@ -39,7 +39,7 @@ const CreateVakinhaModal: React.FC<CreateVakinhaModalProps> = ({ onClose, onCrea
         />
         <input
           type="number"
-          placeholder="Objetivo (em dinheiro)"
+          placeholder="Objetivo (em ETH)"
           value={objetivo}
           onChange={(e) => setObjetivo(e.target.value as number)}
           style={styles.input}
