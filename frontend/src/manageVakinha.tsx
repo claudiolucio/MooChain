@@ -131,16 +131,16 @@ const ManageVakinha: React.FC<{ vaquinhaId: number }> = ({ vaquinhaId }) => {
   return (
     <Container>
       <Heading>Gerencie sua Vakinha</Heading>
-      <p>Vakinha ID: {vaquinhaId} </p>
+      <p>Sua Vakinha: {vaquinhaId} </p>
       {creatorAddress && <p>Creator Address: {creatorAddress}</p>}
-      <label htmlFor="withdrawAmount">Withdraw Amount:</label>
+      <label htmlFor="withdrawAmount">Valor do saque:</label>
       <input
         type="number"
         id="withdrawAmount"
         value={withdrawAmount}
         onChange={(e) => setWithdrawAmount(Number(e.target.value))}
       />
-      <Button onClick={handleWithdraw}>Withdraw</Button>
+      <Button onClick={handleWithdraw}>Sacar</Button>
       {errorMessage && <ErrorMessage>{errorMessage}</ErrorMessage>}
       {successMessage && <SuccessMessage>{successMessage}</SuccessMessage>}
     </Container>
