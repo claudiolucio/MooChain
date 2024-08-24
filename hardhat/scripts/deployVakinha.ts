@@ -1,10 +1,7 @@
-import { formatEther, parseEther } from "viem";
 import hre from "hardhat";
 
 async function main() {
-  // Aqui, não precisamos de um timestamp como no contrato Lock.
-  // Vamos fazer o deploy do contrato Vaquinha sem argumentos no construtor.
-  
+  // Aqui, estamos usando o Hardhat para fazer o deploy do contrato "Vaquinha"
   const vaquinha = await hre.viem.deployContract("Vaquinha", [], {});
 
   console.log(`Vaquinha deployed to ${vaquinha.address}`);
