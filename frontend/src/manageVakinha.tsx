@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useAccount, useContractRead, useSimulateContract, useWriteContract } from 'wagmi';
+import { useAccount, useReadContract, useSimulateContract, useWriteContract } from 'wagmi';
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { formatEther } from "viem";
@@ -12,7 +12,7 @@ const ManageVakinha: React.FC<{ vaquinhaId: number, contractAddress: string }> =
   const navigate = useNavigate();
 
   // Lê o endereço do criador da vakinha
-  const { data: creatorAddress } = useContractRead({
+  const { data: creatorAddress } = useReadContract({
     address: contractAddress as `0x${string}`,
     abi: vaquinhaAbi,
     functionName: 'getCreator',
@@ -20,7 +20,7 @@ const ManageVakinha: React.FC<{ vaquinhaId: number, contractAddress: string }> =
   });
 
   // Lê o valor total arrecadado pela vakinha
-  const { data: totalRaisedData = BigInt(0) } = useContractRead({
+  const { data: totalRaisedData = BigInt(0) } = useReadContract({
     address: contractAddress as `0x${string}`,
     abi: vaquinhaAbi,
     functionName: 'getTotalRaised',
