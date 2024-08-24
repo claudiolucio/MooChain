@@ -3,7 +3,7 @@ import { createConfig, WagmiProvider } from 'wagmi';
 import { mainnet, sepolia } from 'wagmi/chains';
 import { createPublicClient, http } from 'viem';
 
-// Configuração do cliente público
+// Configuração do cliente público test test
 const publicClient = createPublicClient({
   chain: sepolia,
   transport: http(),
