@@ -16,6 +16,8 @@ const colors = {
   border: "#e0e0e0",
   hover: "#66bb6a",
   darkBackground: "#2c3e50",
+  buttonSecondary: "#f44336", // Adicionada cor secundária para botão
+  buttonSecondaryHover: "#e57373", // Cor de hover para botão secundário
 };
 
 // Estilização com styled-components
@@ -23,7 +25,7 @@ const Container = styled.div`
   padding: 20px;
   background-color: ${colors.background};
   min-height: 100vh;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -48,17 +50,22 @@ const Heading = styled.h1`
   font-weight: bold;
 `;
 
-const Button = styled.button`
+const Button = styled.button<{ secondary?: boolean }>`
   padding: 10px 20px;
-  background-color: ${colors.primary};
+  background-color: ${({ secondary }) => (secondary ? colors.buttonSecondary : colors.primary)};
   color: ${colors.lightText};
   border: none;
   border-radius: 4px;
   cursor: pointer;
   font-size: 16px;
   transition: background-color 0.3s;
+  margin: 10px 0;
   &:hover {
-    background-color: ${colors.hover};
+    background-color: ${({ secondary }) => (secondary ? colors.buttonSecondaryHover : colors.hover)};
+  }
+
+  @media (min-width: 600px) {
+    margin: 0 10px; // Espaçamento lateral entre os botões em telas maiores
   }
 `;
 
@@ -111,7 +118,9 @@ const VakinhaCard = styled.div`
   box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
   cursor: pointer;
   text-align: center;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s;
   &:hover {
     transform: scale(1.05);
     box-shadow: 0px 8px 12px rgba(0, 0, 0, 0.2);
@@ -149,6 +158,23 @@ const ModalOverlay = styled.div`
   z-index: 1000;
 `;
 
+const SectionContent = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+`;
+
+const ButtonGroup = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  @media (min-width: 600px) {
+    flex-direction: row;
+    justify-content: center; // Alinha os botões no centro horizontalmente em telas maiores
+  }
+`;
+
 const Dashboard = () => {
   const { logout } = useAuth0();
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
@@ -165,7 +191,7 @@ const Dashboard = () => {
   };
 
   const filteredVakinhas = vakinhaList.filter((vakinha) =>
-    vakinha.nome.toLowerCase().includes(searchQuery.toLowerCase())
+    vakinha.nome.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   const navigate = useNavigate();
@@ -191,7 +217,7 @@ const Dashboard = () => {
         const provider = new ethers.BrowserProvider(window.ethereum);
         const accounts = await provider.send("eth_requestAccounts", []);
         if (accounts.length > 0 && accounts[0] !== walletAddress) {
-          setWalletAddress(accounts[0]);  // Atualiza com a nova carteira selecionada
+          setWalletAddress(accounts[0]); // Atualiza com a nova carteira selecionada
         }
       } catch (error) {
         console.error("Erro ao trocar de carteira", error);
@@ -209,7 +235,7 @@ const Dashboard = () => {
   }, []);
 
   const manageVakinha = (vakinhaId: number) => {
-    const vakinha = vakinhaList.find(v => v.id === vakinhaId);
+    const vakinha = vakinhaList.find((v) => v.id === vakinhaId);
     if (vakinha) {
       navigate(`/manage-vakinha/${vakinhaId}`);
     } else {
@@ -225,16 +251,22 @@ const Dashboard = () => {
     <Container>
       <Header>
         <Heading>Vakinha Blockchain</Heading>
-        <Button onClick={() => logout()}>Logout</Button>
+        <Button onClick={() => logout()} secondary>
+          Logout
+        </Button>
       </Header>
 
       <Section>
         {walletAddress ? (
-          <div>
+          <SectionContent>
             <WalletInfo>Carteira conectada: {walletAddress}</WalletInfo>
-            <Button onClick={switchWallet}>Trocar Carteira</Button>
-            <Button onClick={() => setIsModalOpen(true)}>Criar Nova Vakinha</Button>
-          </div>
+            <ButtonGroup>
+              <Button onClick={switchWallet} secondary>
+                Trocar Carteira
+              </Button>
+              <Button onClick={() => setIsModalOpen(true)}>Criar Nova Vakinha</Button>
+            </ButtonGroup>
+          </SectionContent>
         ) : (
           <Button onClick={connectWallet}>Conectar MetaMask</Button>
         )}
@@ -255,8 +287,7 @@ const Dashboard = () => {
             <VakinhaCard
               key={vakinha.id}
               onMouseEnter={() => setHoverCard(vakinha.id)}
-              onMouseLeave={() => setHoverCard(null)}
-            >
+              onMouseLeave={() => setHoverCard(null)}>
               <VakinhaTitle>{vakinha.nome}</VakinhaTitle>
               <VakinhaDescription>{vakinha.descricao}</VakinhaDescription>
               <Button onClick={() => manageVakinha(vakinha.id)}>Gerenciar Vakinha</Button>
@@ -269,10 +300,7 @@ const Dashboard = () => {
 
       {isModalOpen && (
         <ModalOverlay>
-          <CreateVakinhaModal
-            onClose={() => setIsModalOpen(false)}
-            onCreate={createVakinhaOnBlockchain}
-          />
+          <CreateVakinhaModal onClose={() => setIsModalOpen(false)} onCreate={createVakinhaOnBlockchain} />
         </ModalOverlay>
       )}
     </Container>
