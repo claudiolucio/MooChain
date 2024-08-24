@@ -1,22 +1,33 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { WagmiConfig } from 'wagmi';
-import { RainbowKitProvider } from './wagmi'; // Importe o RainbowKitProvider e config
-import { config } from './wagmi';
-import Dashboard from './dashboard';
+import { getDefaultWallets, RainbowKitProvider } from '@rainbow-me/rainbowkit';
+import { createConfig, WagmiProvider } from 'wagmi';
+import { mainnet, sepolia } from 'wagmi/chains';
+import { createPublicClient, http } from 'viem';
 
-function App() {
+// Configuração do cliente público
+const publicClient = createPublicClient({
+  chain: sepolia,
+  transport: http(),
+});
+
+// Configuração de conectores
+const { connectors } = getDefaultWallets({
+  appName: 'YourAppName',
+  chains: [mainnet, sepolia],
+});
+
+// Configuração do Wagmi
+const config = createConfig({
+  autoConnect: true,
+  connectors,
+  publicClient,
+});
+
+export default function App() {
   return (
-    <WagmiConfig config={config}>
-      <RainbowKitProvider chains={[hardhat, sepolia]}>
-        <Router>
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-          </Routes>
-        </Router>
+    <WagmiProvider config={config}>
+      <RainbowKitProvider chains={[mainnet, sepolia]}>
+        {/* Suas rotas e componentes */}
       </RainbowKitProvider>
-    </WagmiConfig>
+    </WagmiProvider>
   );
 }
-
-export default App;

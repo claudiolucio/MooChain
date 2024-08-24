@@ -1,9 +1,93 @@
 import React, { useState, useEffect } from "react";
-import { useAccount } from "wagmi";
-import { ethers } from "ethers";
+import { useAccount, useContractRead, useSimulateContract, useWriteContract } from 'wagmi';
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
+import { formatEther } from "viem";
 
+const ManageVakinha: React.FC<{ vaquinhaId: number, contractAddress: string }> = ({ vaquinhaId, contractAddress }) => {
+  const { address: userAddress, isConnected } = useAccount();
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  const navigate = useNavigate();
+
+  // Lê o endereço do criador da vakinha
+  const { data: creatorAddress } = useContractRead({
+    address: contractAddress as `0x${string}`,
+    abi: vaquinhaAbi,
+    functionName: 'getCreator',
+    args: [BigInt(vaquinhaId)],
+  });
+
+  // Lê o valor total arrecadado pela vakinha
+  const { data: totalRaisedData = BigInt(0) } = useContractRead({
+    address: contractAddress as `0x${string}`,
+    abi: vaquinhaAbi,
+    functionName: 'getTotalRaised',
+    args: [BigInt(vaquinhaId)],
+  });
+
+  const totalRaised = totalRaisedData ? parseFloat(formatEther(totalRaisedData)) : 0;
+
+  // Simula a execução da função withdraw
+  const { data: simulationData } = useSimulateContract({
+    address: contractAddress as `0x${string}`,
+    abi: vaquinhaAbi,
+    functionName: 'withdraw',
+    args: [BigInt(vaquinhaId)],
+  });
+
+  // Usa o hook useWriteContract para realizar a transação real
+  const { write: withdraw } = useWriteContract();
+
+  const handleWithdraw = async () => {
+    if (!simulationData?.request) {
+      setErrorMessage("Falha na simulação ou dados ausentes.");
+      return;
+    }
+
+    if (typeof creatorAddress === "string" && creatorAddress.toLowerCase() !== userAddress?.toLowerCase()) {
+      setErrorMessage("Você não tem permissão para sacar desta Vakinha.");
+      return;
+    }
+
+    try {
+      withdraw(simulationData.request);
+      setSuccessMessage("Saque realizado com sucesso!");
+      setErrorMessage(null);
+    } catch (error) {
+      setErrorMessage("Falha ao realizar saque: " + (error as Error).message);
+      setSuccessMessage(null);
+    }
+  };
+
+  const handleBack = () => {
+    navigate(-1);
+  };
+
+  return (
+    <Container>
+      <Header>
+        <Heading>Gerencie sua Vakinha</Heading>
+      </Header>
+      <Card>
+        <BackButton onClick={handleBack}>Voltar</BackButton>
+        <CardTitle>Sua Vakinha: {vaquinhaId}</CardTitle>
+        {typeof creatorAddress === "string" && <p>Endereço do Criador: {creatorAddress}</p>}
+        <p><strong>Valor Arrecadado:</strong> {totalRaised} ETH</p>
+        <Button onClick={handleWithdraw}>Sacar</Button>
+        {errorMessage && <ErrorMessage>{errorMessage}</ErrorMessage>}
+        {successMessage && <SuccessMessage>{successMessage}</SuccessMessage>}
+      </Card>
+    </Container>
+  );
+};
+
+export default ManageVakinha;
+
+
+
+// Estilizações com styled-components
 const colors = {
     background: "#f0f4f8",
     primary: "#4caf50",
@@ -63,23 +147,6 @@ const CardTitle = styled.h2`
     color: ${colors.text};
 `;
 
-const Label = styled.label`
-    display: block;
-    margin-bottom: 8px;
-    font-size: 16px;
-    color: ${colors.text};
-`;
-
-const Input = styled.input`
-    padding: 10px;
-    width: 70%;
-    border-radius: 4px;
-    border: 1px solid ${colors.border};
-    margin-bottom: 20px;
-    margin-right: 10px;
-    font-size: 16px;
-`;
-
 const Button = styled.button`
     padding: 10px 20px;
     background-color: ${colors.primary};
@@ -110,6 +177,7 @@ const BackButton = styled.button`
         background-color: blue;
     }
 `;
+
 const ErrorMessage = styled.p`
     color: red;
     font-size: 16px;
@@ -123,103 +191,25 @@ const SuccessMessage = styled.p`
 `;
 
 const vaquinhaAbi = [
-    "function withdraw(uint vaquinhaId) public",
-    "function getCreator(uint vaquinhaId) public view returns (address)",
-    "function getTotalRaised(uint vaquinhaId) public view returns (uint256)",
-];
-
-const ManageVakinha: React.FC<{ vaquinhaId: number, walletAddress: string }> = ({ vaquinhaId, walletAddress }) => {
-    const { address: userAddress, isConnected } = useAccount();
-    const [withdrawAmount, setWithdrawAmount] = useState<number>(0);
-    const [errorMessage, setErrorMessage] = useState<string | null>(null);
-    const [successMessage, setSuccessMessage] = useState<string | null>(null);
-    const [creatorAddress, setCreatorAddress] = useState<string | null>(null);
-    const [totalRaised, setTotalRaised] = useState<number>(0);
-
-    const navigate = useNavigate();
-    const vaquinhaAddress = walletAddress;
-
-    useEffect(() => {
-        const fetchData = async () => {
-            if (!isConnected || !userAddress) return;
-
-            try {
-                if (typeof window.ethereum === "undefined") {
-                    setErrorMessage("MetaMask is not installed. Please install it to use this feature.");
-                    return;
-                }
-
-                const provider = new ethers.providers.Web3Provider(window.ethereum);
-                const vaquinhaContract = new ethers.Contract(vaquinhaAddress, vaquinhaAbi, provider);
-
-                const creator = await vaquinhaContract.getCreator(vaquinhaId);
-                setCreatorAddress(creator);
-
-                const raised = await vaquinhaContract.getTotalRaised(vaquinhaId);
-                setTotalRaised(Number(ethers.utils.formatEther(raised)));
-            } catch (error) {
-                setErrorMessage("Failed to fetch data: " + (error as Error).message);
-            }
-        };
-
-        fetchData();
-    }, [vaquinhaId, isConnected, userAddress, vaquinhaAddress]);
-
-    const handleWithdraw = async () => {
-        try {
-            if (!isConnected || !userAddress) {
-                setErrorMessage("Connect your wallet to proceed.");
-                return;
-            }
-
-            if (creatorAddress?.toLowerCase() !== userAddress.toLowerCase()) {
-                setErrorMessage("You are not authorized to withdraw from this Vakinha.");
-                return;
-            }
-
-            const provider = new ethers.providers.Web3Provider(window.ethereum);
-            const signer = provider.getSigner();
-
-            const vaquinhaContract = new ethers.Contract(vaquinhaAddress, vaquinhaAbi, signer);
-            const tx = await vaquinhaContract.withdraw(vaquinhaId);
-
-            await tx.wait();
-
-            setSuccessMessage("Withdrawal successful!");
-            setErrorMessage(null);
-        } catch (error) {
-            setErrorMessage("Withdrawal failed: " + (error as Error).message);
-            setSuccessMessage(null);
-        }
-    };
-
-    const handleBack = () => {
-        navigate(-1);
-    };
-
-    return (
-        <Container>
-            <Header>
-                <Heading>Gerencie sua Vakinha</Heading>
-            </Header>
-            <Card>
-                <BackButton onClick={handleBack}>Voltar</BackButton>
-                <CardTitle>Sua Vakinha: {vaquinhaId}</CardTitle>
-                {creatorAddress && <p>Creator Address: {creatorAddress}</p>}
-                <p><strong>Valor Arrecadado:</strong> {totalRaised} ETH</p>
-                <Label htmlFor="withdrawAmount">Valor do saque:</Label>
-                <Input
-                    type="number"
-                    id="withdrawAmount"
-                    value={withdrawAmount}
-                    onChange={(e) => setWithdrawAmount(Number(e.target.value))}
-                />
-                <Button onClick={handleWithdraw}>Sacar</Button>
-                {errorMessage && <ErrorMessage>{errorMessage}</ErrorMessage>}
-                {successMessage && <SuccessMessage>{successMessage}</SuccessMessage>}
-            </Card>
-        </Container>
-    );
-};
-
-export default ManageVakinha;
+    {
+      type: "function",
+      name: "withdraw",
+      stateMutability: "nonpayable",
+      inputs: [{ name: "vaquinhaId", type: "uint256" }],
+      outputs: [],
+    },
+    {
+      type: "function",
+      name: "getCreator",
+      stateMutability: "view",
+      inputs: [{ name: "vaquinhaId", type: "uint256" }],
+      outputs: [{ type: "address" }],
+    },
+    {
+      type: "function",
+      name: "getTotalRaised",
+      stateMutability: "view",
+      inputs: [{ name: "vaquinhaId", type: "uint256" }],
+      outputs: [{ type: "uint256" }],
+    },
+  ];

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { ethers } from "ethers";
 import { useAuth0 } from "@auth0/auth0-react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
+import { useAccount, useConnect, useDisconnect } from 'wagmi';
+import { ConnectButton } from '@rainbow-me/rainbowkit';
 import CreateVakinhaModal from "./CreateVakinhaModal";
 
 // Paleta de Cores
@@ -16,8 +17,8 @@ const colors = {
   border: "#e0e0e0",
   hover: "#66bb6a",
   darkBackground: "#2c3e50",
-  buttonSecondary: "#f44336", // Adicionada cor secundária para botão
-  buttonSecondaryHover: "#e57373", // Cor de hover para botão secundário
+  buttonSecondary: "#f44336",
+  buttonSecondaryHover: "#e57373",
 };
 
 // Estilização com styled-components
@@ -65,7 +66,7 @@ const Button = styled.button<{ secondary?: boolean }>`
   }
 
   @media (min-width: 600px) {
-    margin: 0 10px; // Espaçamento lateral entre os botões em telas maiores
+    margin: 0 10px;
   }
 `;
 
@@ -171,13 +172,13 @@ const ButtonGroup = styled.div`
 
   @media (min-width: 600px) {
     flex-direction: row;
-    justify-content: center; // Alinha os botões no centro horizontalmente em telas maiores
+    justify-content: center;
   }
 `;
 
 const Dashboard = () => {
   const { logout } = useAuth0();
-  const [walletAddress, setWalletAddress] = useState<string | null>(null);
+  const { address, isConnected } = useAccount();
   const [searchQuery, setSearchQuery] = useState("");
   const [vakinhaList, setVakinhaList] = useState([
     { id: 1, nome: "Vakinha 1", descricao: "Ajude a Vakinha 1" },
@@ -195,37 +196,6 @@ const Dashboard = () => {
   );
 
   const navigate = useNavigate();
-
-  const connectWallet = async () => {
-    if (window.ethereum) {
-      try {
-        const provider = new ethers.BrowserProvider(window.ethereum);
-        const accounts = await provider.send("eth_requestAccounts", []);
-        setWalletAddress(accounts[0]);
-      } catch (error) {
-        console.error("Erro ao conectar a MetaMask", error);
-      }
-    } else {
-      alert("MetaMask não encontrada. Instale a extensão.");
-    }
-  };
-
-  const switchWallet = async () => {
-    if (window.ethereum) {
-      try {
-        // Requere ao usuário que selecione outra conta
-        const provider = new ethers.BrowserProvider(window.ethereum);
-        const accounts = await provider.send("eth_requestAccounts", []);
-        if (accounts.length > 0 && accounts[0] !== walletAddress) {
-          setWalletAddress(accounts[0]); // Atualiza com a nova carteira selecionada
-        }
-      } catch (error) {
-        console.error("Erro ao trocar de carteira", error);
-      }
-    } else {
-      alert("MetaMask não encontrada. Instale a extensão.");
-    }
-  };
 
   useEffect(() => {
     const storedVakinhaList = localStorage.getItem("vakinhaList");
@@ -257,18 +227,16 @@ const Dashboard = () => {
       </Header>
 
       <Section>
-        {walletAddress ? (
+        {isConnected ? (
           <SectionContent>
-            <WalletInfo>Carteira conectada: {walletAddress}</WalletInfo>
+            <WalletInfo>Carteira conectada: {address}</WalletInfo>
             <ButtonGroup>
-              <Button onClick={switchWallet} secondary>
-                Trocar Carteira
-              </Button>
+              <ConnectButton label="Trocar Carteira" />
               <Button onClick={() => setIsModalOpen(true)}>Criar Nova Vakinha</Button>
             </ButtonGroup>
           </SectionContent>
         ) : (
-          <Button onClick={connectWallet}>Conectar MetaMask</Button>
+          <ConnectButton label="Conectar MetaMask" />
         )}
       </Section>
 
