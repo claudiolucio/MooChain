@@ -2,6 +2,67 @@ import React, { useState } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import styled from "styled-components";
 
+const LoginPage = () => {
+  const { loginWithRedirect, logout, user, isAuthenticated, isLoading } = useAuth0();
+
+  // Estado para gerenciar o hover no botão
+  const [isHovering, setIsHovering] = useState(false);
+
+  const handleMouseEnter = () => {
+    setIsHovering(true);
+  };
+
+  const handleMouseLeave = () => {
+    setIsHovering(false);
+  };
+
+  if (isLoading) {
+    return (
+      <Container>
+        <Text>Carregando...</Text>
+      </Container>
+    );
+  }
+
+  return (
+    <Container>
+      {!isAuthenticated ? (
+        <Box>
+          <Heading>Faça login para continuar</Heading>
+          <Button
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
+            onClick={() => loginWithRedirect()}
+          >
+            Login
+          </Button>
+        </Box>
+      ) : (
+        <Box>
+          <Heading>Bem-vindo, {user?.name}</Heading>
+          <ProfileImage
+            src={user?.picture}
+            alt="Profile"
+          />
+          <Text>Email: {user?.email}</Text>
+          <Button
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
+            onClick={() => {
+              logout();
+              window.location.href = window.location.origin; // Redirecionamento manual após logout
+            }}
+          >
+            Logout
+          </Button>
+        </Box>
+      )}
+    </Container>
+  );
+};
+
+export default LoginPage;
+
 // Paleta de Cores Verdes
 const colors = {
   background: "#e0f5e8", // Fundo suave
@@ -79,64 +140,3 @@ const Text = styled.p`
   color: ${colors.textPrimary};
   font-size: 1.2rem;
 `;
-
-const LoginPage = () => {
-  const { loginWithRedirect, logout, user, isAuthenticated, isLoading } = useAuth0();
-
-  // Estado para gerenciar o hover no botão
-  const [isHovering, setIsHovering] = useState(false);
-
-  const handleMouseEnter = () => {
-    setIsHovering(true);
-  };
-
-  const handleMouseLeave = () => {
-    setIsHovering(false);
-  };
-
-  if (isLoading) {
-    return (
-      <Container>
-        <Text>Carregando...</Text>
-      </Container>
-    );
-  }
-
-  return (
-    <Container>
-      {!isAuthenticated ? (
-        <Box>
-          <Heading>Faça login para continuar</Heading>
-          <Button
-            onMouseEnter={handleMouseEnter}
-            onMouseLeave={handleMouseLeave}
-            onClick={() => loginWithRedirect()}
-          >
-            Login
-          </Button>
-        </Box>
-      ) : (
-        <Box>
-          <Heading>Bem-vindo, {user?.name}</Heading>
-          <ProfileImage
-            src={user?.picture}
-            alt="Profile"
-          />
-          <Text>Email: {user?.email}</Text>
-          <Button
-            onMouseEnter={handleMouseEnter}
-            onMouseLeave={handleMouseLeave}
-            onClick={() => {
-              logout();
-              window.location.href = window.location.origin; // Redirecionamento manual após logout
-            }}
-          >
-            Logout
-          </Button>
-        </Box>
-      )}
-    </Container>
-  );
-};
-
-export default LoginPage;

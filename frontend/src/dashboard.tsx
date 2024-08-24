@@ -6,6 +6,107 @@ import { useAccount, useConnect, useDisconnect } from 'wagmi';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import CreateVakinhaModal from "./CreateVakinhaModal";
 
+const Dashboard = () => {
+  const { logout } = useAuth0();
+  const { address, isConnected } = useAccount();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [vakinhaList, setVakinhaList] = useState([
+    { id: 1, nome: "Vakinha 1", descricao: "Ajude a Vakinha 1" },
+    { id: 2, nome: "Vakinha 2", descricao: "Ajude a Vakinha 2" },
+  ]);
+  const [hoverCard, setHoverCard] = useState<number | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+  };
+
+  const filteredVakinhas = vakinhaList.filter((vakinha) =>
+    vakinha.nome.toLowerCase().includes(searchQuery.toLowerCase()),
+  );
+
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const storedVakinhaList = localStorage.getItem("vakinhaList");
+    if (storedVakinhaList) {
+      setVakinhaList(JSON.parse(storedVakinhaList));
+    }
+  }, []);
+
+  const manageVakinha = (vakinhaId: number) => {
+    const vakinha = vakinhaList.find((v) => v.id === vakinhaId);
+    if (vakinha) {
+      navigate(`/manage-vakinha/${vakinhaId}`);
+    } else {
+      alert("Você não tem permissão para gerenciar esta vakinha.");
+    }
+  };
+
+  function createVakinhaOnBlockchain(nome: string, descricao: string, objetivo: number, duracao: number): void {
+    throw new Error("Function not implemented.");
+  }
+
+  return (
+    <Container>
+      <Header>
+        <Heading>Vakinha Blockchain</Heading>
+        <Button onClick={() => logout()} secondary>
+          Logout
+        </Button>
+      </Header>
+
+      <Section>
+        {isConnected ? (
+          <SectionContent>
+            <WalletInfo>Carteira conectada: {address}</WalletInfo>
+            <ButtonGroup>
+              <ConnectButton label="Trocar Carteira" />
+              <Button onClick={() => setIsModalOpen(true)}>Criar Nova Vakinha</Button>
+            </ButtonGroup>
+          </SectionContent>
+        ) : (
+          <ConnectButton label="Conectar MetaMask" />
+        )}
+      </Section>
+
+      <SearchSection>
+        <SearchInput
+          type="text"
+          placeholder="Pesquisar vakinhas..."
+          value={searchQuery}
+          onChange={handleSearchChange}
+        />
+      </SearchSection>
+
+      <VakinhaList>
+        {filteredVakinhas.length > 0 ? (
+          filteredVakinhas.map((vakinha) => (
+            <VakinhaCard
+              key={vakinha.id}
+              onMouseEnter={() => setHoverCard(vakinha.id)}
+              onMouseLeave={() => setHoverCard(null)}>
+              <VakinhaTitle>{vakinha.nome}</VakinhaTitle>
+              <VakinhaDescription>{vakinha.descricao}</VakinhaDescription>
+              <Button onClick={() => manageVakinha(vakinha.id)}>Gerenciar Vakinha</Button>
+            </VakinhaCard>
+          ))
+        ) : (
+          <p>Nenhuma vakinha encontrada</p>
+        )}
+      </VakinhaList>
+
+      {isModalOpen && (
+        <ModalOverlay>
+          <CreateVakinhaModal onClose={() => setIsModalOpen(false)} onCreate={createVakinhaOnBlockchain} />
+        </ModalOverlay>
+      )}
+    </Container>
+  );
+};
+
+export default Dashboard;
+
 // Paleta de Cores
 const colors = {
   background: "#f0f4f8",
@@ -175,104 +276,3 @@ const ButtonGroup = styled.div`
     justify-content: center;
   }
 `;
-
-const Dashboard = () => {
-  const { logout } = useAuth0();
-  const { address, isConnected } = useAccount();
-  const [searchQuery, setSearchQuery] = useState("");
-  const [vakinhaList, setVakinhaList] = useState([
-    { id: 1, nome: "Vakinha 1", descricao: "Ajude a Vakinha 1" },
-    { id: 2, nome: "Vakinha 2", descricao: "Ajude a Vakinha 2" },
-  ]);
-  const [hoverCard, setHoverCard] = useState<number | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
-  };
-
-  const filteredVakinhas = vakinhaList.filter((vakinha) =>
-    vakinha.nome.toLowerCase().includes(searchQuery.toLowerCase()),
-  );
-
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    const storedVakinhaList = localStorage.getItem("vakinhaList");
-    if (storedVakinhaList) {
-      setVakinhaList(JSON.parse(storedVakinhaList));
-    }
-  }, []);
-
-  const manageVakinha = (vakinhaId: number) => {
-    const vakinha = vakinhaList.find((v) => v.id === vakinhaId);
-    if (vakinha) {
-      navigate(`/manage-vakinha/${vakinhaId}`);
-    } else {
-      alert("Você não tem permissão para gerenciar esta vakinha.");
-    }
-  };
-
-  function createVakinhaOnBlockchain(nome: string, descricao: string, objetivo: number, duracao: number): void {
-    throw new Error("Function not implemented.");
-  }
-
-  return (
-    <Container>
-      <Header>
-        <Heading>Vakinha Blockchain</Heading>
-        <Button onClick={() => logout()} secondary>
-          Logout
-        </Button>
-      </Header>
-
-      <Section>
-        {isConnected ? (
-          <SectionContent>
-            <WalletInfo>Carteira conectada: {address}</WalletInfo>
-            <ButtonGroup>
-              <ConnectButton label="Trocar Carteira" />
-              <Button onClick={() => setIsModalOpen(true)}>Criar Nova Vakinha</Button>
-            </ButtonGroup>
-          </SectionContent>
-        ) : (
-          <ConnectButton label="Conectar MetaMask" />
-        )}
-      </Section>
-
-      <SearchSection>
-        <SearchInput
-          type="text"
-          placeholder="Pesquisar vakinhas..."
-          value={searchQuery}
-          onChange={handleSearchChange}
-        />
-      </SearchSection>
-
-      <VakinhaList>
-        {filteredVakinhas.length > 0 ? (
-          filteredVakinhas.map((vakinha) => (
-            <VakinhaCard
-              key={vakinha.id}
-              onMouseEnter={() => setHoverCard(vakinha.id)}
-              onMouseLeave={() => setHoverCard(null)}>
-              <VakinhaTitle>{vakinha.nome}</VakinhaTitle>
-              <VakinhaDescription>{vakinha.descricao}</VakinhaDescription>
-              <Button onClick={() => manageVakinha(vakinha.id)}>Gerenciar Vakinha</Button>
-            </VakinhaCard>
-          ))
-        ) : (
-          <p>Nenhuma vakinha encontrada</p>
-        )}
-      </VakinhaList>
-
-      {isModalOpen && (
-        <ModalOverlay>
-          <CreateVakinhaModal onClose={() => setIsModalOpen(false)} onCreate={createVakinhaOnBlockchain} />
-        </ModalOverlay>
-      )}
-    </Container>
-  );
-};
-
-export default Dashboard;
