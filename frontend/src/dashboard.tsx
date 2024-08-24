@@ -1,10 +1,9 @@
-import React, { useState } from "react";
-import { useAuth0 } from "@auth0/auth0-react";
+import React, { useState, useEffect } from "react";
 import { ethers } from "ethers";
-import { useNavigate } from "react-router-dom"; 
+import { useAuth0 } from "@auth0/auth0-react";
+import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import CreateVakinhaModal from "./CreateVakinhaModal";
-import { useEffect } from "react";
 
 // Paleta de Cores
 const colors = {
@@ -185,25 +184,29 @@ const Dashboard = () => {
     }
   };
 
-  const createVakinhaOnBlockchain = (nome: string, descricao: string, objetivo: number, duracao: number, creator: string) => {
-    const newVakinha = {
-      id: vakinhaList.length + 1,
-      nome,
-      descricao,
-      creator: walletAddress,
-    };
-    const updatedVakinhaList = [...vakinhaList, newVakinha];
-    setVakinhaList(updatedVakinhaList);
-    localStorage.setItem("vakinhaList", JSON.stringify(updatedVakinhaList));
+  const switchWallet = async () => {
+    if (window.ethereum) {
+      try {
+        // Requere ao usuário que selecione outra conta
+        const provider = new ethers.BrowserProvider(window.ethereum);
+        const accounts = await provider.send("eth_requestAccounts", []);
+        if (accounts.length > 0 && accounts[0] !== walletAddress) {
+          setWalletAddress(accounts[0]);  // Atualiza com a nova carteira selecionada
+        }
+      } catch (error) {
+        console.error("Erro ao trocar de carteira", error);
+      }
+    } else {
+      alert("MetaMask não encontrada. Instale a extensão.");
+    }
   };
-  
+
   useEffect(() => {
     const storedVakinhaList = localStorage.getItem("vakinhaList");
     if (storedVakinhaList) {
       setVakinhaList(JSON.parse(storedVakinhaList));
     }
   }, []);
-  
 
   const manageVakinha = (vakinhaId: number) => {
     const vakinha = vakinhaList.find(v => v.id === vakinhaId);
@@ -213,7 +216,10 @@ const Dashboard = () => {
       alert("Você não tem permissão para gerenciar esta vakinha.");
     }
   };
-  
+
+  function createVakinhaOnBlockchain(nome: string, descricao: string, objetivo: number, duracao: number): void {
+    throw new Error("Function not implemented.");
+  }
 
   return (
     <Container>
@@ -226,6 +232,7 @@ const Dashboard = () => {
         {walletAddress ? (
           <div>
             <WalletInfo>Carteira conectada: {walletAddress}</WalletInfo>
+            <Button onClick={switchWallet}>Trocar Carteira</Button>
             <Button onClick={() => setIsModalOpen(true)}>Criar Nova Vakinha</Button>
           </div>
         ) : (
@@ -259,7 +266,6 @@ const Dashboard = () => {
           <p>Nenhuma vakinha encontrada</p>
         )}
       </VakinhaList>
-
 
       {isModalOpen && (
         <ModalOverlay>

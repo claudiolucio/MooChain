@@ -8,8 +8,8 @@ interface CreateVakinhaModalProps {
 const CreateVakinhaModal: React.FC<CreateVakinhaModalProps> = ({ onClose, onCreate }) => {
   const [nome, setNome] = useState("");
   const [descricao, setDescricao] = useState("");
-  const [objetivo, setObjetivo] = useState<number | "">("");
-  const [duracao, setDuracao] = useState<number | "">("");
+  const [objetivo, setObjetivo] = useState<string>("");
+  const [duracao, setDuracao] = useState<string>("");
 
   const handleSubmit = () => {
     if (nome && descricao && objetivo && duracao) {
@@ -41,14 +41,14 @@ const CreateVakinhaModal: React.FC<CreateVakinhaModalProps> = ({ onClose, onCrea
           type="number"
           placeholder="Objetivo (em ETH)"
           value={objetivo}
-          onChange={(e) => setObjetivo(e.target.value as number)}
+          onChange={(e) => setObjetivo(e.target.value)}
           style={styles.input}
         />
         <input
           type="number"
           placeholder="Duração (em dias)"
           value={duracao}
-          onChange={(e) => setDuracao(e.target.value as number)}
+          onChange={(e) => setDuracao(e.target.value)}
           style={styles.input}
         />
         <div style={styles.actions}>
@@ -64,7 +64,7 @@ const CreateVakinhaModal: React.FC<CreateVakinhaModalProps> = ({ onClose, onCrea
   );
 };
 
-const styles = {
+const styles: { [key: string]: React.CSSProperties } = {
   overlay: {
     position: "fixed",
     top: 0,
@@ -83,7 +83,7 @@ const styles = {
     borderRadius: "8px",
     width: "90%",
     maxWidth: "500px",
-    textAlign: "center",
+    textAlign: "center" as "center", // Casting the textAlign value to 'center'
   },
   input: {
     width: "80%",
@@ -99,7 +99,7 @@ const styles = {
     marginBottom: "10px",
     borderRadius: "4px",
     border: "1px solid #e0e0e0",
-    resize: "none", // Remove a opção de redimensionar
+    resize: "none",
   },
   actions: {
     display: "flex",
