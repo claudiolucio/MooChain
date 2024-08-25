@@ -1,33 +1,23 @@
-import { getDefaultWallets, RainbowKitProvider } from '@rainbow-me/rainbowkit';
-import { createConfig, WagmiProvider } from 'wagmi';
-import { mainnet, sepolia } from 'wagmi/chains';
-import { createPublicClient, http } from 'viem';
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import Dashboard from "./dashboard";
+import React from "react";
+import ManageVakinha from "./manageVakinha";
 
-// Configuração do cliente público test test
-const publicClient = createPublicClient({
-  chain: sepolia,
-  transport: http(),
-});
-
-// Configuração de conectores
-const { connectors } = getDefaultWallets({
-  appName: 'YourAppName',
-  chains: [mainnet, sepolia],
-});
-
-// Configuração do Wagmi
-const config = createConfig({
-  autoConnect: true,
-  connectors,
-  publicClient,
-});
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <Dashboard contractAddress="0x5fbdb2315678afecb367f032d93f642f64180aa3" />,
+  },
+  {
+    path: "/manage-vakinha/:vaquinhaId",
+    element: <ManageVakinha contractAddress="0x5fbdb2315678afecb367f032d93f642f64180aa3" />,
+  },
+]);
 
 export default function App() {
   return (
-    <WagmiProvider config={config}>
-      <RainbowKitProvider chains={[mainnet, sepolia]}>
-        {/* Suas rotas e componentes */}
-      </RainbowKitProvider>
-    </WagmiProvider>
+    <React.StrictMode>
+      <RouterProvider router={router} />
+    </React.StrictMode>
   );
 }

@@ -1,12 +1,22 @@
+/* eslint-disable linebreak-style */
+/* eslint-disable quotes */
 import React, { useState, useEffect } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
-import { useNavigate } from "react-router-dom";
+// import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
-import { useAccount, useConnect, useDisconnect } from 'wagmi';
-import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { useAccount } from "wagmi";
+import { ConnectButton } from "@rainbow-me/rainbowkit";
 import CreateVakinhaModal from "./CreateVakinhaModal";
+import {
+  useReadVaquinhaGetVaquinha,
+  useReadVaquinhaGetVaquinhaCount,
+  useWriteVaquinhaCreateVaquinha,
+} from "./generated";
+import { useNavigate } from "react-router-dom";
+import { waitForTransactionReceipt } from "wagmi/actions";
+import { config } from "./wagmi";
 
-const Dashboard = () => {
+const Dashboard = ({ contractAddress }: { contractAddress: `0x${string}` }) => {
   const { logout } = useAuth0();
   const { address, isConnected } = useAccount();
   const [searchQuery, setSearchQuery] = useState("");
@@ -24,6 +34,10 @@ const Dashboard = () => {
   const filteredVakinhas = vakinhaList.filter((vakinha) =>
     vakinha.nome.toLowerCase().includes(searchQuery.toLowerCase()),
   );
+
+  const { writeContractAsync: createVaquinha } = useWriteVaquinhaCreateVaquinha();
+  const { data: vaquinhaList } = useReadVaquinhaGetVaquinhaCount({ address: contractAddress });
+  console.log("vaquinhaList", JSON.stringify(vaquinhaList));
 
   const navigate = useNavigate();
 
@@ -43,9 +57,12 @@ const Dashboard = () => {
     }
   };
 
-  function createVakinhaOnBlockchain(nome: string, descricao: string, objetivo: number, duracao: number): void {
-    throw new Error("Function not implemented.");
-  }
+  const createVakinhaOnBlockchain = async (nome: string, objetivo: number, duracao: number): Promise<void> => {
+    const tx = await createVaquinha({
+      args: [nome, BigInt(objetivo), BigInt(duracao)],
+      address: contractAddress,
+    });
+  };
 
   return (
     <Container>

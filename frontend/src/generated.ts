@@ -1,4 +1,3 @@
-/* eslint-disable linebreak-style */
 import {
   createUseReadContract,
   createUseWriteContract,
@@ -7,84 +6,138 @@ import {
 } from 'wagmi/codegen'
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Counter
+// Vaquinha
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-export const counterAbi = [
+export const vaquinhaAbi = [
   {
-    type: 'constructor',
-    inputs: [{ name: '_i', internalType: 'int256', type: 'int256' }],
-    stateMutability: 'nonpayable',
-  },
-  {
-    type: 'function',
-    inputs: [],
-    name: 'dec',
-    outputs: [],
-    stateMutability: 'nonpayable',
-  },
-  {
-    type: 'function',
-    inputs: [],
-    name: 'i',
-    outputs: [{ name: '', internalType: 'int256', type: 'int256' }],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    inputs: [],
-    name: 'inc',
-    outputs: [],
-    stateMutability: 'nonpayable',
-  },
-] as const
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Lock
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-export const lockAbi = [
-  {
-    type: 'constructor',
-    inputs: [{ name: '_unlockTime', internalType: 'uint256', type: 'uint256' }],
-    stateMutability: 'payable',
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'vaquinhaId',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: false,
+      },
+      {
+        name: 'contribuinte',
+        internalType: 'address',
+        type: 'address',
+        indexed: false,
+      },
+      {
+        name: 'valor',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: false,
+      },
+    ],
+    name: 'ContribuicaoRecebida',
   },
   {
     type: 'event',
     anonymous: false,
     inputs: [
       {
-        name: 'amount',
+        name: 'vaquinhaId',
         internalType: 'uint256',
         type: 'uint256',
         indexed: false,
       },
       {
-        name: 'when',
+        name: 'valor',
         internalType: 'uint256',
         type: 'uint256',
         indexed: false,
       },
     ],
-    name: 'Withdrawal',
+    name: 'SaqueRealizado',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'vaquinhaId',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: false,
+      },
+      { name: 'nome', internalType: 'string', type: 'string', indexed: false },
+      {
+        name: 'objetivo',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: false,
+      },
+      {
+        name: 'duracao',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: false,
+      },
+    ],
+    name: 'VaquinhaCriada',
   },
   {
     type: 'function',
-    inputs: [],
-    name: 'owner',
-    outputs: [{ name: '', internalType: 'address payable', type: 'address' }],
+    inputs: [{ name: 'vaquinhaId', internalType: 'uint256', type: 'uint256' }],
+    name: 'contribute',
+    outputs: [],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'nome', internalType: 'string', type: 'string' },
+      { name: 'objetivo', internalType: 'uint256', type: 'uint256' },
+      { name: 'duracaoDias', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'createVaquinha',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'vaquinhaId', internalType: 'uint256', type: 'uint256' }],
+    name: 'getVaquinha',
+    outputs: [
+      { name: '', internalType: 'string', type: 'string' },
+      { name: '', internalType: 'address', type: 'address' },
+      { name: '', internalType: 'uint256', type: 'uint256' },
+      { name: '', internalType: 'uint256', type: 'uint256' },
+      { name: '', internalType: 'uint256', type: 'uint256' },
+      { name: '', internalType: 'uint256', type: 'uint256' },
+      { name: '', internalType: 'bool', type: 'bool' },
+    ],
     stateMutability: 'view',
   },
   {
     type: 'function',
     inputs: [],
-    name: 'unlockTime',
+    name: 'getVaquinhaCount',
     outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
     stateMutability: 'view',
   },
   {
     type: 'function',
-    inputs: [],
+    inputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    name: 'vaquinhas',
+    outputs: [
+      { name: 'nome', internalType: 'string', type: 'string' },
+      { name: 'criador', internalType: 'address payable', type: 'address' },
+      { name: 'objetivo', internalType: 'uint256', type: 'uint256' },
+      { name: 'saldo', internalType: 'uint256', type: 'uint256' },
+      { name: 'dataCriacao', internalType: 'uint256', type: 'uint256' },
+      { name: 'duracao', internalType: 'uint256', type: 'uint256' },
+      { name: 'ativa', internalType: 'bool', type: 'bool' },
+    ],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'vaquinhaId', internalType: 'uint256', type: 'uint256' }],
     name: 'withdraw',
     outputs: [],
     stateMutability: 'nonpayable',
@@ -96,129 +149,133 @@ export const lockAbi = [
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
- * Wraps __{@link useReadContract}__ with `abi` set to __{@link counterAbi}__
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link vaquinhaAbi}__
  */
-export const useReadCounter = /*#__PURE__*/ createUseReadContract({
-  abi: counterAbi,
+export const useReadVaquinha = /*#__PURE__*/ createUseReadContract({
+  abi: vaquinhaAbi,
 })
 
 /**
- * Wraps __{@link useReadContract}__ with `abi` set to __{@link counterAbi}__ and `functionName` set to `"i"`
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link vaquinhaAbi}__ and `functionName` set to `"getVaquinha"`
  */
-export const useReadCounterI = /*#__PURE__*/ createUseReadContract({
-  abi: counterAbi,
-  functionName: 'i',
+export const useReadVaquinhaGetVaquinha = /*#__PURE__*/ createUseReadContract({
+  abi: vaquinhaAbi,
+  functionName: 'getVaquinha',
 })
 
 /**
- * Wraps __{@link useWriteContract}__ with `abi` set to __{@link counterAbi}__
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link vaquinhaAbi}__ and `functionName` set to `"getVaquinhaCount"`
  */
-export const useWriteCounter = /*#__PURE__*/ createUseWriteContract({
-  abi: counterAbi,
+export const useReadVaquinhaGetVaquinhaCount =
+  /*#__PURE__*/ createUseReadContract({
+    abi: vaquinhaAbi,
+    functionName: 'getVaquinhaCount',
+  })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link vaquinhaAbi}__ and `functionName` set to `"vaquinhas"`
+ */
+export const useReadVaquinhaVaquinhas = /*#__PURE__*/ createUseReadContract({
+  abi: vaquinhaAbi,
+  functionName: 'vaquinhas',
 })
 
 /**
- * Wraps __{@link useWriteContract}__ with `abi` set to __{@link counterAbi}__ and `functionName` set to `"dec"`
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link vaquinhaAbi}__
  */
-export const useWriteCounterDec = /*#__PURE__*/ createUseWriteContract({
-  abi: counterAbi,
-  functionName: 'dec',
+export const useWriteVaquinha = /*#__PURE__*/ createUseWriteContract({
+  abi: vaquinhaAbi,
 })
 
 /**
- * Wraps __{@link useWriteContract}__ with `abi` set to __{@link counterAbi}__ and `functionName` set to `"inc"`
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link vaquinhaAbi}__ and `functionName` set to `"contribute"`
  */
-export const useWriteCounterInc = /*#__PURE__*/ createUseWriteContract({
-  abi: counterAbi,
-  functionName: 'inc',
+export const useWriteVaquinhaContribute = /*#__PURE__*/ createUseWriteContract({
+  abi: vaquinhaAbi,
+  functionName: 'contribute',
 })
 
 /**
- * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link counterAbi}__
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link vaquinhaAbi}__ and `functionName` set to `"createVaquinha"`
  */
-export const useSimulateCounter = /*#__PURE__*/ createUseSimulateContract({
-  abi: counterAbi,
-})
+export const useWriteVaquinhaCreateVaquinha =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: vaquinhaAbi,
+    functionName: 'createVaquinha',
+  })
 
 /**
- * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link counterAbi}__ and `functionName` set to `"dec"`
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link vaquinhaAbi}__ and `functionName` set to `"withdraw"`
  */
-export const useSimulateCounterDec = /*#__PURE__*/ createUseSimulateContract({
-  abi: counterAbi,
-  functionName: 'dec',
-})
-
-/**
- * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link counterAbi}__ and `functionName` set to `"inc"`
- */
-export const useSimulateCounterInc = /*#__PURE__*/ createUseSimulateContract({
-  abi: counterAbi,
-  functionName: 'inc',
-})
-
-/**
- * Wraps __{@link useReadContract}__ with `abi` set to __{@link lockAbi}__
- */
-export const useReadLock = /*#__PURE__*/ createUseReadContract({ abi: lockAbi })
-
-/**
- * Wraps __{@link useReadContract}__ with `abi` set to __{@link lockAbi}__ and `functionName` set to `"owner"`
- */
-export const useReadLockOwner = /*#__PURE__*/ createUseReadContract({
-  abi: lockAbi,
-  functionName: 'owner',
-})
-
-/**
- * Wraps __{@link useReadContract}__ with `abi` set to __{@link lockAbi}__ and `functionName` set to `"unlockTime"`
- */
-export const useReadLockUnlockTime = /*#__PURE__*/ createUseReadContract({
-  abi: lockAbi,
-  functionName: 'unlockTime',
-})
-
-/**
- * Wraps __{@link useWriteContract}__ with `abi` set to __{@link lockAbi}__
- */
-export const useWriteLock = /*#__PURE__*/ createUseWriteContract({
-  abi: lockAbi,
-})
-
-/**
- * Wraps __{@link useWriteContract}__ with `abi` set to __{@link lockAbi}__ and `functionName` set to `"withdraw"`
- */
-export const useWriteLockWithdraw = /*#__PURE__*/ createUseWriteContract({
-  abi: lockAbi,
+export const useWriteVaquinhaWithdraw = /*#__PURE__*/ createUseWriteContract({
+  abi: vaquinhaAbi,
   functionName: 'withdraw',
 })
 
 /**
- * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link lockAbi}__
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link vaquinhaAbi}__
  */
-export const useSimulateLock = /*#__PURE__*/ createUseSimulateContract({
-  abi: lockAbi,
+export const useSimulateVaquinha = /*#__PURE__*/ createUseSimulateContract({
+  abi: vaquinhaAbi,
 })
 
 /**
- * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link lockAbi}__ and `functionName` set to `"withdraw"`
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link vaquinhaAbi}__ and `functionName` set to `"contribute"`
  */
-export const useSimulateLockWithdraw = /*#__PURE__*/ createUseSimulateContract({
-  abi: lockAbi,
-  functionName: 'withdraw',
+export const useSimulateVaquinhaContribute =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: vaquinhaAbi,
+    functionName: 'contribute',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link vaquinhaAbi}__ and `functionName` set to `"createVaquinha"`
+ */
+export const useSimulateVaquinhaCreateVaquinha =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: vaquinhaAbi,
+    functionName: 'createVaquinha',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link vaquinhaAbi}__ and `functionName` set to `"withdraw"`
+ */
+export const useSimulateVaquinhaWithdraw =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: vaquinhaAbi,
+    functionName: 'withdraw',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link vaquinhaAbi}__
+ */
+export const useWatchVaquinhaEvent = /*#__PURE__*/ createUseWatchContractEvent({
+  abi: vaquinhaAbi,
 })
 
 /**
- * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link lockAbi}__
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link vaquinhaAbi}__ and `eventName` set to `"ContribuicaoRecebida"`
  */
-export const useWatchLockEvent = /*#__PURE__*/ createUseWatchContractEvent({
-  abi: lockAbi,
-})
-
-/**
- * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link lockAbi}__ and `eventName` set to `"Withdrawal"`
- */
-export const useWatchLockWithdrawalEvent =
+export const useWatchVaquinhaContribuicaoRecebidaEvent =
   /*#__PURE__*/ createUseWatchContractEvent({
-    abi: lockAbi,
-    eventName: 'Withdrawal',
+    abi: vaquinhaAbi,
+    eventName: 'ContribuicaoRecebida',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link vaquinhaAbi}__ and `eventName` set to `"SaqueRealizado"`
+ */
+export const useWatchVaquinhaSaqueRealizadoEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: vaquinhaAbi,
+    eventName: 'SaqueRealizado',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link vaquinhaAbi}__ and `eventName` set to `"VaquinhaCriada"`
+ */
+export const useWatchVaquinhaVaquinhaCriadaEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: vaquinhaAbi,
+    eventName: 'VaquinhaCriada',
   })
