@@ -1,10 +1,128 @@
-import React, { useState } from "react";
+/* eslint-disable linebreak-style */
+/* eslint-disable quotes */
+import React, { useState, useEffect } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
-import { ethers } from "ethers";
-import { useNavigate } from "react-router-dom"; 
+// import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
+import { useAccount } from "wagmi";
+import { ConnectButton } from "@rainbow-me/rainbowkit";
 import CreateVakinhaModal from "./CreateVakinhaModal";
-import { useEffect } from "react";
+import {
+  useReadVaquinhaGetVaquinha,
+  useReadVaquinhaGetVaquinhaCount,
+  useWriteVaquinhaCreateVaquinha,
+} from "./generated";
+import { useNavigate } from "react-router-dom";
+import { waitForTransactionReceipt } from "wagmi/actions";
+import { config } from "./wagmi";
+
+const Dashboard = ({ contractAddress }: { contractAddress: `0x${string}` }) => {
+  const { logout } = useAuth0();
+  const { address, isConnected } = useAccount();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [vakinhaList, setVakinhaList] = useState([
+    { id: 1, nome: "Vakinha 1", descricao: "Ajude a Vakinha 1" },
+    { id: 2, nome: "Vakinha 2", descricao: "Ajude a Vakinha 2" },
+  ]);
+  const [hoverCard, setHoverCard] = useState<number | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+  };
+
+  const filteredVakinhas = vakinhaList.filter((vakinha) =>
+    vakinha.nome.toLowerCase().includes(searchQuery.toLowerCase()),
+  );
+
+  const { writeContractAsync: createVaquinha } = useWriteVaquinhaCreateVaquinha();
+  const { data: vaquinhaList } = useReadVaquinhaGetVaquinhaCount({ address: contractAddress });
+  console.log("vaquinhaList", JSON.stringify(vaquinhaList));
+
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const storedVakinhaList = localStorage.getItem("vakinhaList");
+    if (storedVakinhaList) {
+      setVakinhaList(JSON.parse(storedVakinhaList));
+    }
+  }, []);
+
+  const manageVakinha = (vakinhaId: number) => {
+    const vakinha = vakinhaList.find((v) => v.id === vakinhaId);
+    if (vakinha) {
+      navigate(`/manage-vakinha/${vakinhaId}`);
+    } else {
+      alert("Você não tem permissão para gerenciar esta vakinha.");
+    }
+  };
+
+  const createVakinhaOnBlockchain = async (nome: string, objetivo: number, duracao: number): Promise<void> => {
+    const tx = await createVaquinha({
+      args: [nome, BigInt(objetivo), BigInt(duracao)],
+      address: contractAddress,
+    });
+  };
+
+  return (
+    <Container>
+      <Header>
+        <Heading>Vakinha Blockchain</Heading>
+        <Button onClick={() => logout()} secondary>
+          Logout
+        </Button>
+      </Header>
+
+      <Section>
+        {isConnected ? (
+          <SectionContent>
+            <WalletInfo>Carteira conectada: {address}</WalletInfo>
+            <ButtonGroup>
+              <ConnectButton label="Trocar Carteira" />
+              <Button onClick={() => setIsModalOpen(true)}>Criar Nova Vakinha</Button>
+            </ButtonGroup>
+          </SectionContent>
+        ) : (
+          <ConnectButton label="Conectar MetaMask" />
+        )}
+      </Section>
+
+      <SearchSection>
+        <SearchInput
+          type="text"
+          placeholder="Pesquisar vakinhas..."
+          value={searchQuery}
+          onChange={handleSearchChange}
+        />
+      </SearchSection>
+
+      <VakinhaList>
+        {filteredVakinhas.length > 0 ? (
+          filteredVakinhas.map((vakinha) => (
+            <VakinhaCard
+              key={vakinha.id}
+              onMouseEnter={() => setHoverCard(vakinha.id)}
+              onMouseLeave={() => setHoverCard(null)}>
+              <VakinhaTitle>{vakinha.nome}</VakinhaTitle>
+              <VakinhaDescription>{vakinha.descricao}</VakinhaDescription>
+              <Button onClick={() => manageVakinha(vakinha.id)}>Gerenciar Vakinha</Button>
+            </VakinhaCard>
+          ))
+        ) : (
+          <p>Nenhuma vakinha encontrada</p>
+        )}
+      </VakinhaList>
+
+      {isModalOpen && (
+        <ModalOverlay>
+          <CreateVakinhaModal onClose={() => setIsModalOpen(false)} onCreate={createVakinhaOnBlockchain} />
+        </ModalOverlay>
+      )}
+    </Container>
+  );
+};
+
+export default Dashboard;
 
 // Paleta de Cores
 const colors = {
@@ -17,6 +135,8 @@ const colors = {
   border: "#e0e0e0",
   hover: "#66bb6a",
   darkBackground: "#2c3e50",
+  buttonSecondary: "#f44336",
+  buttonSecondaryHover: "#e57373",
 };
 
 // Estilização com styled-components
@@ -24,7 +144,7 @@ const Container = styled.div`
   padding: 20px;
   background-color: ${colors.background};
   min-height: 100vh;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -49,17 +169,22 @@ const Heading = styled.h1`
   font-weight: bold;
 `;
 
-const Button = styled.button`
+const Button = styled.button<{ secondary?: boolean }>`
   padding: 10px 20px;
-  background-color: ${colors.primary};
+  background-color: ${({ secondary }) => (secondary ? colors.buttonSecondary : colors.primary)};
   color: ${colors.lightText};
   border: none;
   border-radius: 4px;
   cursor: pointer;
   font-size: 16px;
   transition: background-color 0.3s;
+  margin: 10px 0;
   &:hover {
-    background-color: ${colors.hover};
+    background-color: ${({ secondary }) => (secondary ? colors.buttonSecondaryHover : colors.hover)};
+  }
+
+  @media (min-width: 600px) {
+    margin: 0 10px;
   }
 `;
 
@@ -112,7 +237,9 @@ const VakinhaCard = styled.div`
   box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
   cursor: pointer;
   text-align: center;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s;
   &:hover {
     transform: scale(1.05);
     box-shadow: 0px 8px 12px rgba(0, 0, 0, 0.2);
@@ -150,127 +277,19 @@ const ModalOverlay = styled.div`
   z-index: 1000;
 `;
 
-const Dashboard = () => {
-  const { logout } = useAuth0();
-  const [walletAddress, setWalletAddress] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [vakinhaList, setVakinhaList] = useState([
-    { id: 1, nome: "Vakinha 1", descricao: "Ajude a Vakinha 1" },
-    { id: 2, nome: "Vakinha 2", descricao: "Ajude a Vakinha 2" },
-  ]);
-  const [hoverCard, setHoverCard] = useState<number | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+const SectionContent = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+`;
 
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
-  };
+const ButtonGroup = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 
-  const filteredVakinhas = vakinhaList.filter((vakinha) =>
-    vakinha.nome.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const navigate = useNavigate();
-
-  const connectWallet = async () => {
-    if (window.ethereum) {
-      try {
-        const provider = new ethers.BrowserProvider(window.ethereum);
-        const accounts = await provider.send("eth_requestAccounts", []);
-        setWalletAddress(accounts[0]);
-      } catch (error) {
-        console.error("Erro ao conectar a MetaMask", error);
-      }
-    } else {
-      alert("MetaMask não encontrada. Instale a extensão.");
-    }
-  };
-
-  const createVakinhaOnBlockchain = (nome: string, descricao: string, objetivo: number, duracao: number, creator: string) => {
-    const newVakinha = {
-      id: vakinhaList.length + 1,
-      nome,
-      descricao,
-      creator: walletAddress,
-    };
-    const updatedVakinhaList = [...vakinhaList, newVakinha];
-    setVakinhaList(updatedVakinhaList);
-    localStorage.setItem("vakinhaList", JSON.stringify(updatedVakinhaList));
-  };
-  
-  useEffect(() => {
-    const storedVakinhaList = localStorage.getItem("vakinhaList");
-    if (storedVakinhaList) {
-      setVakinhaList(JSON.parse(storedVakinhaList));
-    }
-  }, []);
-  
-
-  const manageVakinha = (vakinhaId: number) => {
-    const vakinha = vakinhaList.find(v => v.id === vakinhaId);
-    if (vakinha) {
-      navigate(`/manage-vakinha/${vakinhaId}`);
-    } else {
-      alert("Você não tem permissão para gerenciar esta vakinha.");
-    }
-  };
-  
-
-  return (
-    <Container>
-      <Header>
-        <Heading>Vakinha Blockchain</Heading>
-        <Button onClick={() => logout()}>Logout</Button>
-      </Header>
-
-      <Section>
-        {walletAddress ? (
-          <div>
-            <WalletInfo>Carteira conectada: {walletAddress}</WalletInfo>
-            <Button onClick={() => setIsModalOpen(true)}>Criar Nova Vakinha</Button>
-          </div>
-        ) : (
-          <Button onClick={connectWallet}>Conectar MetaMask</Button>
-        )}
-      </Section>
-
-      <SearchSection>
-        <SearchInput
-          type="text"
-          placeholder="Pesquisar vakinhas..."
-          value={searchQuery}
-          onChange={handleSearchChange}
-        />
-      </SearchSection>
-
-      <VakinhaList>
-        {filteredVakinhas.length > 0 ? (
-          filteredVakinhas.map((vakinha) => (
-            <VakinhaCard
-              key={vakinha.id}
-              onMouseEnter={() => setHoverCard(vakinha.id)}
-              onMouseLeave={() => setHoverCard(null)}
-            >
-              <VakinhaTitle>{vakinha.nome}</VakinhaTitle>
-              <VakinhaDescription>{vakinha.descricao}</VakinhaDescription>
-              <Button onClick={() => manageVakinha(vakinha.id)}>Gerenciar Vakinha</Button>
-            </VakinhaCard>
-          ))
-        ) : (
-          <p>Nenhuma vakinha encontrada</p>
-        )}
-      </VakinhaList>
-
-
-      {isModalOpen && (
-        <ModalOverlay>
-          <CreateVakinhaModal
-            onClose={() => setIsModalOpen(false)}
-            onCreate={createVakinhaOnBlockchain}
-          />
-        </ModalOverlay>
-      )}
-    </Container>
-  );
-};
-
-export default Dashboard;
+  @media (min-width: 600px) {
+    flex-direction: row;
+    justify-content: center;
+  }
+`;

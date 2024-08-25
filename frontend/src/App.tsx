@@ -1,36 +1,23 @@
-/* eslint-disable linebreak-style */
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import Dashboard from "./dashboard";
 import React from "react";
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { useAuth0 } from "@auth0/auth0-react";
-import LoginPage from "./loginPage.tsx"; // Importe a página de login
-import Dashboard from "./dashboard.tsx"; // Importe o Dashboard
-import ManageVakinha from "./ManageVakinha.tsx";
+import ManageVakinha from "./manageVakinha";
 
-function App() {
-  const { isAuthenticated, isLoading } = useAuth0(); // Use o hook useAuth0 para autenticação
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <Dashboard contractAddress="0x5fbdb2315678afecb367f032d93f642f64180aa3" />,
+  },
+  {
+    path: "/manage-vakinha/:vaquinhaId",
+    element: <ManageVakinha contractAddress="0x5fbdb2315678afecb367f032d93f642f64180aa3" />,
+  },
+]);
 
-  // Mostre uma tela de carregamento enquanto o estado de autenticação está sendo carregado
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
-
-  // Se o usuário não estiver autenticado, mostre a página de login
-  if (!isAuthenticated) {
-    return <LoginPage />;
-  }
-
-
+export default function App() {
   return (
-    <Router>
-      <div>
-        <Routes>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/manage-vakinha/:vaquinhaId" element={<ManageVakinha />} />
-        </Routes>
-      </div>
-    </Router>
+    <React.StrictMode>
+      <RouterProvider router={router} />
+    </React.StrictMode>
   );
-  
 }
-
-export default App;
