@@ -13,8 +13,9 @@ const RenderVaquinhasById = ({ vaquinhaId, contractAddress }: { vaquinhaId: numb
   if (!vaquinhasFromContract) return <p>Essa vaquinha não foi encontrada</p>;
 
   // Verifica se a vakinha está ativa ou se o saldo é maior que zero
-  const saldo = BigInt(vaquinhasFromContract[3]);
-  const ativa = vaquinhasFromContract[6];
+  const saldo = BigInt(vaquinhasFromContract[4]);
+  const ativa = vaquinhasFromContract[7];
+  console.log(vaquinhasFromContract);
 
   if (saldo === 0n && !ativa) {
     return null; // Se a vakinha não tiver saldo ou não estiver ativa, não renderiza
@@ -31,13 +32,13 @@ const RenderVaquinhasById = ({ vaquinhaId, contractAddress }: { vaquinhaId: numb
       </CardHeader>
       <CardBody>
         <Description>
-          Criador: <span>{vaquinhasFromContract[1]}</span>
+          Criador: <span>{vaquinhasFromContract[2]}</span>
         </Description>
         <Info>
-          Objetivo: <span>{vaquinhasFromContract[2].toString()} ETH</span>
+          Objetivo: <span>{vaquinhasFromContract[3].toString()} ETH</span>
         </Info>
         <Info>
-          Saldo: <span>{vaquinhasFromContract[3].toString()} ETH</span>
+          Saldo: <span>{vaquinhasFromContract[4].toString()} ETH</span>
         </Info>
       </CardBody>
       <CardFooter>
@@ -91,6 +92,9 @@ const Description = styled.p`
   font-size: 16px;
   color: #333333;
   margin-bottom: 10px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis; /* Adiciona reticências */
   span {
     font-weight: bold;
     color: #4caf50;

@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 contract Vaquinha {
     struct VaquinhaInfo {
         string nome;
+        string descricao; // Adicionando a descrição
         address payable criador;
         uint objetivo;
         uint saldo;
@@ -17,6 +18,7 @@ contract Vaquinha {
     event VaquinhaCriada(
         uint vaquinhaId,
         string nome,
+        string descricao,
         uint objetivo,
         uint duracao
     );
@@ -28,9 +30,10 @@ contract Vaquinha {
     event SaqueRealizado(uint vaquinhaId, uint valor);
     event VaquinhaDeletada(uint vaquinhaId);
 
-    // Cria uma nova vaquinha
+    // Função para criar uma nova vaquinha
     function createVaquinha(
         string memory nome,
+        string memory descricao,
         uint objetivo,
         uint duracaoDias
     ) public {
@@ -45,14 +48,21 @@ contract Vaquinha {
                 saldo: 0,
                 dataCriacao: block.timestamp,
                 duracao: duracaoDias * 1 days,
-                ativa: true
+                ativa: true,
+                descricao: descricao
             })
         );
 
-        emit VaquinhaCriada(vaquinhas.length - 1, nome, objetivo, duracaoDias);
+        emit VaquinhaCriada(
+            vaquinhas.length - 1,
+            nome,
+            descricao,
+            objetivo,
+            duracaoDias
+        );
     }
 
-    // Contribui para uma vaquinha
+    // Função para contribuir com uma vaquinha
     function contribute(uint vaquinhaId) public payable {
         require(vaquinhaId < vaquinhas.length, "Vaquinha inexistente");
         VaquinhaInfo storage vaquinha = vaquinhas[vaquinhaId];
@@ -62,7 +72,7 @@ contract Vaquinha {
         emit ContribuicaoRecebida(vaquinhaId, msg.sender, msg.value);
     }
 
-    // Saque pelo criador da vaquinha
+    // Função para saque pelo criador da vaquinha
     function withdraw(uint vaquinhaId) public {
         require(vaquinhaId < vaquinhas.length, "Vaquinha inexistente");
         VaquinhaInfo storage vaquinha = vaquinhas[vaquinhaId];
@@ -126,7 +136,16 @@ contract Vaquinha {
     )
         public
         view
-        returns (string memory, address, uint, uint, uint, uint, bool)
+        returns (
+            string memory,
+            address,
+            uint,
+            uint,
+            uint,
+            uint,
+            bool,
+            string memory
+        )
     {
         require(vaquinhaId < vaquinhas.length, "Vaquinha inexistente");
         VaquinhaInfo memory vaquinha = vaquinhas[vaquinhaId];
@@ -137,7 +156,8 @@ contract Vaquinha {
             vaquinha.saldo,
             vaquinha.dataCriacao,
             vaquinha.duracao,
-            vaquinha.ativa
+            vaquinha.ativa,
+            vaquinha.descricao // Retorna a descrição
         );
     }
 }

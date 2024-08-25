@@ -50,7 +50,7 @@ const Dashboard = ({ contractAddress }: { contractAddress: `0x${string}` }) => {
   ): Promise<number> => {
     try {
       const txHash = await createVaquinha({
-        args: [nome, BigInt(objetivo), BigInt(duracao)],
+        args: [nome, descricao, BigInt(objetivo), BigInt(duracao)], // Converte BigInt para string
         address: contractAddress,
       });
 

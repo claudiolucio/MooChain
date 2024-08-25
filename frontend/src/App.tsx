@@ -8,11 +8,11 @@ import LoginPage from "./loginPage";
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <Dashboard contractAddress="0x72bb9c7ffbE2Ed234e53bc64862DdA6d9fFF333b" />,
+    element: <Dashboard contractAddress="0x538D2755B5Fb9A4f7c5769bdcf5103E569D6E241" />,
   },
   {
     path: "/manage-vakinha/:vaquinhaId",
-    element: <ManageVakinha contractAddress="0x72bb9c7ffbE2Ed234e53bc64862DdA6d9fFF333b" />,
+    element: <ManageVakinha contractAddress="0x538D2755B5Fb9A4f7c5769bdcf5103E569D6E241" />,
   },
 ]);
 

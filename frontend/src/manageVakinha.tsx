@@ -15,7 +15,6 @@ const ManageVakinha: React.FC<{ contractAddress: `0x${string}` }> = ({ contractA
   const { address: userAddress } = useAccount();
   const { state } = useLocation(); // Pega o estado da navegação
 
-  const descricao = state?.descricao || "Descrição não disponível"; // Acessa a descrição do estado
   const [donationAmount, setDonationAmount] = useState<string>("");
 
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -27,11 +26,12 @@ const ManageVakinha: React.FC<{ contractAddress: `0x${string}` }> = ({ contractA
     address: contractAddress,
     args: [BigInt(vaquinhaId ?? 0)],
   });
-
+  console.log(vaquinhaData);
   const nome = vaquinhaData ? vaquinhaData[0] : "Nome não disponível";
   const totalRaised = vaquinhaData ? vaquinhaData[3] : 0; // Saldo arrecadado
-  const objective = vaquinhaData ? vaquinhaData[2] : 0; // Objetivo
+  const objective = vaquinhaData ? vaquinhaData[2] : 0n; // Objetivo
   const creatorAddress = vaquinhaData ? vaquinhaData[1] : ""; // Criador
+  const descricao = vaquinhaData ? vaquinhaData[7] : "Descrição não disponível"; // Descrição
 
   const percentageRaised = objective ? (Number(totalRaised) / Number(objective)) * 100 : 0;
 
@@ -217,11 +217,26 @@ const Card = styled.div`
   padding: 20px;
   width: 100%;
   max-width: 450px;
+  min-height: 200px; /* Define a altura mínima */
+  max-height: 500px; /* Limite de altura para evitar crescimento excessivo */
+  overflow: hidden; /* Impede que o conteúdo transborde */
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
   margin-bottom: 20px;
   position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 `;
 
+const Details = styled.div`
+  font-size: 16px;
+  color: ${colors.text};
+  margin-bottom: 20px;
+  word-wrap: break-word; /* Quebra palavras muito longas */
+  overflow-wrap: break-word; /* Garante que o texto se quebre adequadamente */
+  max-height: 150px; /* Limite de altura */
+  overflow-y: auto; /* Habilita o scroll quando o conteúdo ultrapassar o limite de altura */
+`;
 const CardTitle = styled.h2`
   margin: 0 0 10px;
   font-size: 20px;
@@ -233,12 +248,6 @@ const Divider = styled.hr`
   border: none;
   border-top: 1px solid ${colors.border};
   margin: 20px 0;
-`;
-
-const Details = styled.div`
-  font-size: 16px;
-  color: ${colors.text};
-  margin-bottom: 20px;
 `;
 
 const DetailItem = styled.p`

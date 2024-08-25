@@ -66,6 +66,12 @@ export const vaquinhaAbi = [
       },
       { name: 'nome', internalType: 'string', type: 'string', indexed: false },
       {
+        name: 'descricao',
+        internalType: 'string',
+        type: 'string',
+        indexed: false,
+      },
+      {
         name: 'objetivo',
         internalType: 'uint256',
         type: 'uint256',
@@ -104,6 +110,7 @@ export const vaquinhaAbi = [
     type: 'function',
     inputs: [
       { name: 'nome', internalType: 'string', type: 'string' },
+      { name: 'descricao', internalType: 'string', type: 'string' },
       { name: 'objetivo', internalType: 'uint256', type: 'uint256' },
       { name: 'duracaoDias', internalType: 'uint256', type: 'uint256' },
     ],
@@ -130,6 +137,7 @@ export const vaquinhaAbi = [
       { name: '', internalType: 'uint256', type: 'uint256' },
       { name: '', internalType: 'uint256', type: 'uint256' },
       { name: '', internalType: 'bool', type: 'bool' },
+      { name: '', internalType: 'string', type: 'string' },
     ],
     stateMutability: 'view',
   },
@@ -146,6 +154,7 @@ export const vaquinhaAbi = [
     name: 'vaquinhas',
     outputs: [
       { name: 'nome', internalType: 'string', type: 'string' },
+      { name: 'descricao', internalType: 'string', type: 'string' },
       { name: 'criador', internalType: 'address payable', type: 'address' },
       { name: 'objetivo', internalType: 'uint256', type: 'uint256' },
       { name: 'saldo', internalType: 'uint256', type: 'uint256' },
