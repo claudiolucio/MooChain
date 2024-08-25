@@ -2,7 +2,7 @@ import React, { useState } from "react";
 
 interface CreateVakinhaModalProps {
   onClose: () => void;
-  onCreate: (nome: string, objetivo: number, duracao: number) => Promise<void>;
+  onCreate: (nome: string, descricao: string, objetivo: number, duracao: number) => Promise<void>;
 }
 
 const CreateVakinhaModal: React.FC<CreateVakinhaModalProps> = ({ onClose, onCreate }) => {
@@ -13,7 +13,7 @@ const CreateVakinhaModal: React.FC<CreateVakinhaModalProps> = ({ onClose, onCrea
 
   const handleSubmit = async () => {
     if (nome && descricao && objetivo && duracao) {
-      await onCreate(nome, Number(objetivo), Number(duracao));
+      await onCreate(nome, descricao, Number(objetivo), Number(duracao));
       onClose();
     } else {
       alert("Por favor, preencha todos os campos.");
@@ -83,7 +83,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     borderRadius: "8px",
     width: "90%",
     maxWidth: "500px",
-    textAlign: "center" as "center", // Casting the textAlign value to 'center'
+    textAlign: "center" as "center",
   },
   input: {
     width: "80%",

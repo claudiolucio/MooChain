@@ -1,17 +1,26 @@
 import React, { useState } from "react";
 import { useAccount, useReadContract, useSimulateContract } from "wagmi";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import styled from "styled-components";
-import { useReadVaquinhaGetVaquinha, useWriteVaquinhaWithdraw } from "./generated";
+import {
+  useReadVaquinhaGetVaquinha,
+  useWriteVaquinhaWithdraw,
+  useWriteVaquinhaContribute,
+} from "./generated";
 
 const ManageVakinha: React.FC<{ contractAddress: `0x${string}` }> = ({ contractAddress }) => {
-  // get the id from the url http://localhost:3000/manage-vakinha/2
   const { vaquinhaId } = useParams();
-  console.log("vaquinhaId", vaquinhaId);
   const { address: userAddress } = useAccount();
+  const { state } = useLocation();
+  
+  // Adicionando log para verificar o estado recebido
+  console.log("Estado recebido na navegação:", state);
+
+  const descricao = state?.descricao || "Descrição não disponível";
+  const [donationAmount, setDonationAmount] = useState<string>(""); // Estado para armazenar o valor da doação
+
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-
   const navigate = useNavigate();
 
   // Lê o endereço do criador da vakinha
@@ -22,8 +31,13 @@ const ManageVakinha: React.FC<{ contractAddress: `0x${string}` }> = ({ contractA
     args: [BigInt(vaquinhaId ?? 0)],
   });
 
-  // Lê o valor total arrecadado pela vakinha
-  const { data: totalRaised } = useReadVaquinhaGetVaquinha();
+  // Lê as informações da Vakinha (incluindo o saldo)
+  const { data: vaquinhaData } = useReadVaquinhaGetVaquinha({
+    address: contractAddress,
+    args: [BigInt(vaquinhaId ?? 0)],
+  });
+
+  const totalRaised = vaquinhaData ? vaquinhaData[3] : 0; // Índice 3 no retorno é o saldo da vakinha
 
   // Simula a execução da função withdraw
   const { data: simulationData } = useSimulateContract({
@@ -34,6 +48,7 @@ const ManageVakinha: React.FC<{ contractAddress: `0x${string}` }> = ({ contractA
   });
 
   const { writeContractAsync: withdraw } = useWriteVaquinhaWithdraw();
+  const { writeContractAsync: contribute } = useWriteVaquinhaContribute();
 
   if (!vaquinhaId) {
     return <p>Nenhuma vaquinha encontrada</p>;
@@ -60,9 +75,31 @@ const ManageVakinha: React.FC<{ contractAddress: `0x${string}` }> = ({ contractA
     }
   };
 
+  const handleDonate = async () => {
+    if (!donationAmount || isNaN(Number(donationAmount))) {
+      setErrorMessage("Por favor, insira um valor válido para doar.");
+      return;
+    }
+
+    try {
+      await contribute({
+        address: contractAddress,
+        args: [BigInt(vaquinhaId)],
+        value: BigInt(Number(donationAmount) * 1e18), // Converte para wei
+      });
+      setSuccessMessage("Doação realizada com sucesso!");
+      setErrorMessage(null);
+    } catch (error) {
+      setErrorMessage("Falha ao realizar doação: " + (error as Error).message);
+      setSuccessMessage(null);
+    }
+  };
+
   const handleBack = () => {
     navigate(-1);
   };
+
+  const isCreator = typeof creatorAddress === "string" && creatorAddress.toLowerCase() === userAddress?.toLowerCase();
 
   return (
     <Container>
@@ -73,10 +110,22 @@ const ManageVakinha: React.FC<{ contractAddress: `0x${string}` }> = ({ contractA
         <BackButton onClick={handleBack}>Voltar</BackButton>
         <CardTitle>Sua Vakinha: {vaquinhaId}</CardTitle>
         {typeof creatorAddress === "string" && <p>Endereço do Criador: {creatorAddress}</p>}
-        <p>
-          <strong>Valor Arrecadado:</strong> {JSON.stringify(totalRaised)} ETH
-        </p>
-        <Button onClick={handleWithdraw}>Sacar</Button>
+        <p><strong>Descrição:</strong> {descricao}</p>
+        <p><strong>Valor Arrecadado:</strong> {Number(totalRaised) / 1e18} ETH</p>
+        {isCreator ? (
+          <Button onClick={handleWithdraw}>Sacar</Button>
+        ) : (
+          <>
+            <input
+              type="number"
+              placeholder="Valor a doar (ETH)"
+              value={donationAmount}
+              onChange={(e) => setDonationAmount(e.target.value)}
+              style={styles.input}
+            />
+            <Button onClick={handleDonate}>Doar</Button>
+          </>
+        )}
         {errorMessage && <ErrorMessage>{errorMessage}</ErrorMessage>}
         {successMessage && <SuccessMessage>{successMessage}</SuccessMessage>}
       </Card>
@@ -188,6 +237,17 @@ const SuccessMessage = styled.p`
   font-size: 16px;
   margin-top: 20px;
 `;
+
+const styles = {
+  input: {
+    width: "100%",
+    padding: "10px",
+    margin: "10px 0",
+    borderRadius: "4px",
+    border: "1px solid #e0e0e0",
+    fontSize: "14px",
+  },
+};
 
 export const vaquinhaAbi = [
   {

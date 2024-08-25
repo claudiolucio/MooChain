@@ -1,14 +1,10 @@
-/* eslint-disable linebreak-style */
-/* eslint-disable quotes */
 import React, { useState, useEffect } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
-// import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { useAccount } from "wagmi";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import CreateVakinhaModal from "./CreateVakinhaModal";
 import {
-  useReadVaquinhaGetVaquinha,
   useReadVaquinhaGetVaquinhaCount,
   useWriteVaquinhaCreateVaquinha,
 } from "./generated";
@@ -36,8 +32,8 @@ const Dashboard = ({ contractAddress }: { contractAddress: `0x${string}` }) => {
   );
 
   const { writeContractAsync: createVaquinha } = useWriteVaquinhaCreateVaquinha();
-  const { data: vaquinhaList } = useReadVaquinhaGetVaquinhaCount({ address: contractAddress });
-  console.log("vaquinhaList", JSON.stringify(vaquinhaList));
+  const { data: vaquinhaCount } = useReadVaquinhaGetVaquinhaCount({ address: contractAddress });
+  console.log("vaquinhaCount", vaquinhaCount);
 
   const navigate = useNavigate();
 
@@ -57,12 +53,37 @@ const Dashboard = ({ contractAddress }: { contractAddress: `0x${string}` }) => {
     }
   };
 
-  const createVakinhaOnBlockchain = async (nome: string, objetivo: number, duracao: number): Promise<void> => {
-    const tx = await createVaquinha({
-      args: [nome, BigInt(objetivo), BigInt(duracao)],
-      address: contractAddress,
-    });
+  const createVakinhaOnBlockchain = async (
+    nome: string,
+    descricao: string,
+    objetivo: number,
+    duracao: number,
+  ): Promise<void> => {
+    try {
+      // A função `createVaquinha` está retornando diretamente o hash da transação
+      const txHash = await createVaquinha({
+        args: [nome, BigInt(objetivo), BigInt(duracao)],
+        address: contractAddress,
+      });
+  
+      // console.log('Hash da Transação:', txHash);
+  
+      // Use diretamente o hash retornado para esperar pelo recibo
+      const receipt = await waitForTransactionReceipt(config, { hash: txHash });
+  
+      if (receipt.status === "success") {
+        const newVakinha = { id: vakinhaList.length + 1, nome, descricao };
+        setVakinhaList((prevList) => [...prevList, newVakinha]);
+        localStorage.setItem('vakinhaList', JSON.stringify([...vakinhaList, newVakinha]));
+        console.log('A vakinha foi criada com sucesso!');
+      }
+    } catch (error) {
+      console.error('Erro ao criar a Vakinha na blockchain:', error);
+    }
   };
+  
+  
+  
 
   return (
     <Container>
@@ -123,7 +144,6 @@ const Dashboard = ({ contractAddress }: { contractAddress: `0x${string}` }) => {
 };
 
 export default Dashboard;
-
 // Paleta de Cores
 const colors = {
   background: "#f0f4f8",
