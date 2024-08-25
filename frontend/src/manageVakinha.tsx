@@ -142,10 +142,10 @@ const ManageVakinha: React.FC<{ contractAddress: `0x${string}` }> = ({ contractA
         </Details>
         <Divider />
         {isCreator ? (
-          <>
+          <ButtonContainer>
             <ActionButton onClick={handleWithdraw}>Sacar</ActionButton>
-            {percentageRaised <= 0 && <ActionButton onClick={handleDelete}>Excluir Vakinha</ActionButton>}
-          </>
+            {percentageRaised <= 0 && <DeleteButton onClick={handleDelete}>Excluir Vakinha</DeleteButton>}
+          </ButtonContainer>
         ) : (
           <DonationSection>
             <DonationInput
@@ -177,6 +177,8 @@ const colors = {
   border: "#e0e0e0",
   hover: "#66bb6a",
   darkBackground: "#2c3e50",
+  deleteButtonBackground: "#f44336", // Vermelho para o botão de exclusão
+  deleteButtonHover: "#e57373",
 };
 
 const Container = styled.div`
@@ -247,6 +249,12 @@ const DetailLabel = styled.span`
   font-weight: bold;
 `;
 
+const ButtonContainer = styled.div`
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+`;
+
 const ActionButton = styled.button`
   padding: 12px 24px;
   background-color: ${colors.primary};
@@ -256,18 +264,24 @@ const ActionButton = styled.button`
   font-size: 16px;
   cursor: pointer;
   transition: background-color 0.3s;
-  display: block;
-  width: 100%;
+  flex: 1;
   text-align: center;
   &:hover {
     background-color: ${colors.hover};
   }
 `;
 
+const DeleteButton = styled(ActionButton)`
+  background-color: ${colors.deleteButtonBackground};
+  &:hover {
+    background-color: ${colors.deleteButtonHover};
+  }
+`;
+
 const DonationSection = styled.div`
   display: flex;
   flex-direction: column;
-  align-items: center; /* Alinha o conteúdo no centro horizontalmente */
+  align-items: center;
   gap: 10px;
 `;
 

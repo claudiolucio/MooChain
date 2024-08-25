@@ -75,7 +75,7 @@ const Dashboard = ({ contractAddress }: { contractAddress: `0x${string}` }) => {
   return (
     <Container>
       <Header>
-        <Heading>Vakinha Blockchain</Heading>
+        <Heading>MooChain</Heading>
         <Button onClick={() => logout()} secondary>
           Logout
         </Button>
