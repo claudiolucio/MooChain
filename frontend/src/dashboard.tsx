@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
-import styled from "styled-components";
 import { useAccount } from "wagmi";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import CreateVakinhaModal from "./CreateVakinhaModal";
@@ -9,9 +8,10 @@ import { useNavigate } from "react-router-dom";
 import { waitForTransactionReceipt } from "wagmi/actions";
 import { config } from "./wagmi";
 import RenderVaquinhasById from "./RenderVaquinhasById";
+import styled from "styled-components";
 
 const Dashboard = ({ contractAddress }: { contractAddress: `0x${string}` }) => {
-  const { logout } = useAuth0();
+  const { logout, isAuthenticated } = useAuth0();
   const { address, isConnected } = useAccount();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -48,7 +48,6 @@ const Dashboard = ({ contractAddress }: { contractAddress: `0x${string}` }) => {
     objetivo: number,
     duracao: number,
   ): Promise<number> => {
-    // Alterado para retornar um número
     try {
       const txHash = await createVaquinha({
         args: [nome, BigInt(objetivo), BigInt(duracao)],
@@ -66,13 +65,14 @@ const Dashboard = ({ contractAddress }: { contractAddress: `0x${string}` }) => {
       }
     } catch (error) {
       console.error("Erro ao criar a Vakinha na blockchain:", error);
-      throw error; // Rejeite a promessa em caso de erro
+      throw error;
     }
 
-    return -1; // Valor de fallback caso algo dê errado
+    return -1;
   };
 
-  return (
+  // Renderiza o conteúdo apenas se o usuário estiver autenticado
+  return isAuthenticated ? (
     <Container>
       <Header>
         <Heading>MooChain</Heading>
@@ -108,6 +108,8 @@ const Dashboard = ({ contractAddress }: { contractAddress: `0x${string}` }) => {
         </ModalOverlay>
       )}
     </Container>
+  ) : (
+    <p>Carregando...</p> // Exibe uma mensagem enquanto o estado de autenticação está sendo verificado
   );
 };
 
