@@ -16,7 +16,7 @@ const RenderVaquinhasById = ({ vaquinhaId, contractAddress }: { vaquinhaId: numb
   const saldo = BigInt(vaquinhasFromContract[3]);
   const ativa = vaquinhasFromContract[6];
 
-  if (saldo === 0n || !ativa) {
+  if (saldo === 0n && !ativa) {
     return null; // Se a vakinha não tiver saldo ou não estiver ativa, não renderiza
   }
 
