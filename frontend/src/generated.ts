@@ -66,6 +66,12 @@ export const vaquinhaAbi = [
       },
       { name: 'nome', internalType: 'string', type: 'string', indexed: false },
       {
+        name: 'descricao',
+        internalType: 'string',
+        type: 'string',
+        indexed: false,
+      },
+      {
         name: 'objetivo',
         internalType: 'uint256',
         type: 'uint256',
@@ -81,6 +87,19 @@ export const vaquinhaAbi = [
     name: 'VaquinhaCriada',
   },
   {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'vaquinhaId',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: false,
+      },
+    ],
+    name: 'VaquinhaDeletada',
+  },
+  {
     type: 'function',
     inputs: [{ name: 'vaquinhaId', internalType: 'uint256', type: 'uint256' }],
     name: 'contribute',
@@ -91,11 +110,19 @@ export const vaquinhaAbi = [
     type: 'function',
     inputs: [
       { name: 'nome', internalType: 'string', type: 'string' },
+      { name: 'descricao', internalType: 'string', type: 'string' },
       { name: 'objetivo', internalType: 'uint256', type: 'uint256' },
       { name: 'duracaoDias', internalType: 'uint256', type: 'uint256' },
     ],
     name: 'createVaquinha',
     outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'vaquinhaId', internalType: 'uint256', type: 'uint256' }],
+    name: 'deleteVaquinha',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
     stateMutability: 'nonpayable',
   },
   {
@@ -110,6 +137,7 @@ export const vaquinhaAbi = [
       { name: '', internalType: 'uint256', type: 'uint256' },
       { name: '', internalType: 'uint256', type: 'uint256' },
       { name: '', internalType: 'bool', type: 'bool' },
+      { name: '', internalType: 'string', type: 'string' },
     ],
     stateMutability: 'view',
   },
@@ -126,6 +154,7 @@ export const vaquinhaAbi = [
     name: 'vaquinhas',
     outputs: [
       { name: 'nome', internalType: 'string', type: 'string' },
+      { name: 'descricao', internalType: 'string', type: 'string' },
       { name: 'criador', internalType: 'address payable', type: 'address' },
       { name: 'objetivo', internalType: 'uint256', type: 'uint256' },
       { name: 'saldo', internalType: 'uint256', type: 'uint256' },
@@ -205,6 +234,15 @@ export const useWriteVaquinhaCreateVaquinha =
   })
 
 /**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link vaquinhaAbi}__ and `functionName` set to `"deleteVaquinha"`
+ */
+export const useWriteVaquinhaDeleteVaquinha =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: vaquinhaAbi,
+    functionName: 'deleteVaquinha',
+  })
+
+/**
  * Wraps __{@link useWriteContract}__ with `abi` set to __{@link vaquinhaAbi}__ and `functionName` set to `"withdraw"`
  */
 export const useWriteVaquinhaWithdraw = /*#__PURE__*/ createUseWriteContract({
@@ -235,6 +273,15 @@ export const useSimulateVaquinhaCreateVaquinha =
   /*#__PURE__*/ createUseSimulateContract({
     abi: vaquinhaAbi,
     functionName: 'createVaquinha',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link vaquinhaAbi}__ and `functionName` set to `"deleteVaquinha"`
+ */
+export const useSimulateVaquinhaDeleteVaquinha =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: vaquinhaAbi,
+    functionName: 'deleteVaquinha',
   })
 
 /**
@@ -278,4 +325,13 @@ export const useWatchVaquinhaVaquinhaCriadaEvent =
   /*#__PURE__*/ createUseWatchContractEvent({
     abi: vaquinhaAbi,
     eventName: 'VaquinhaCriada',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link vaquinhaAbi}__ and `eventName` set to `"VaquinhaDeletada"`
+ */
+export const useWatchVaquinhaVaquinhaDeletadaEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: vaquinhaAbi,
+    eventName: 'VaquinhaDeletada',
   })

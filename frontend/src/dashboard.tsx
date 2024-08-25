@@ -1,78 +1,85 @@
-/* eslint-disable linebreak-style */
-/* eslint-disable quotes */
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
-// import { useNavigate } from "react-router-dom";
-import styled from "styled-components";
 import { useAccount } from "wagmi";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import CreateVakinhaModal from "./CreateVakinhaModal";
-import {
-  useReadVaquinhaGetVaquinha,
-  useReadVaquinhaGetVaquinhaCount,
-  useWriteVaquinhaCreateVaquinha,
-} from "./generated";
+import { useReadVaquinhaGetVaquinhaCount, useWriteVaquinhaCreateVaquinha } from "./generated";
 import { useNavigate } from "react-router-dom";
 import { waitForTransactionReceipt } from "wagmi/actions";
 import { config } from "./wagmi";
+import RenderVaquinhasById from "./RenderVaquinhasById";
+import styled from "styled-components";
 
 const Dashboard = ({ contractAddress }: { contractAddress: `0x${string}` }) => {
-  const { logout } = useAuth0();
+  const { logout, isAuthenticated } = useAuth0();
   const { address, isConnected } = useAccount();
-  const [searchQuery, setSearchQuery] = useState("");
-  const [vakinhaList, setVakinhaList] = useState([
-    { id: 1, nome: "Vakinha 1", descricao: "Ajude a Vakinha 1" },
-    { id: 2, nome: "Vakinha 2", descricao: "Ajude a Vakinha 2" },
-  ]);
-  const [hoverCard, setHoverCard] = useState<number | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState<string>("");
+
+  const { data: vaquinhaCount, refetch } = useReadVaquinhaGetVaquinhaCount({
+    address: contractAddress,
+  });
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
   };
 
-  const filteredVakinhas = vakinhaList.filter((vakinha) =>
-    vakinha.nome.toLowerCase().includes(searchQuery.toLowerCase()),
-  );
+  const renderAllVakinhas = () => {
+    if (!vaquinhaCount || Number(vaquinhaCount) === 0) return <p>Nenhuma vakinha encontrada</p>;
 
-  const { writeContractAsync: createVaquinha } = useWriteVaquinhaCreateVaquinha();
-  const { data: vaquinhaList } = useReadVaquinhaGetVaquinhaCount({ address: contractAddress });
-  console.log("vaquinhaList", JSON.stringify(vaquinhaList));
+    const vakinhasArray = Array.from({ length: Number(vaquinhaCount) }, (_, i) => i);
+
+    return vakinhasArray.map((vaquinhaId) => (
+      <RenderVaquinhasById key={vaquinhaId} vaquinhaId={vaquinhaId} contractAddress={contractAddress} />
+    ));
+  };
 
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const storedVakinhaList = localStorage.getItem("vakinhaList");
-    if (storedVakinhaList) {
-      setVakinhaList(JSON.parse(storedVakinhaList));
-    }
-  }, []);
-
   const manageVakinha = (vakinhaId: number) => {
-    const vakinha = vakinhaList.find((v) => v.id === vakinhaId);
-    if (vakinha) {
-      navigate(`/manage-vakinha/${vakinhaId}`);
-    } else {
-      alert("Você não tem permissão para gerenciar esta vakinha.");
+    navigate(`/manage-vakinha/${vakinhaId}`);
+  };
+
+  const { writeContractAsync: createVaquinha } = useWriteVaquinhaCreateVaquinha();
+
+  const createVakinhaOnBlockchain = async (
+    nome: string,
+    descricao: string,
+    objetivo: number,
+    duracao: number,
+  ): Promise<number> => {
+    try {
+      const txHash = await createVaquinha({
+        args: [nome, descricao, BigInt(objetivo), BigInt(duracao)], // Converte BigInt para string
+        address: contractAddress,
+      });
+
+      const receipt = await waitForTransactionReceipt(config, { hash: txHash });
+
+      if (receipt.status === "success") {
+        console.log("Vakinha criada com sucesso!");
+        refetch(); // Refetch the vakinha count after creating a new one
+
+        const vaquinhaId = Number(vaquinhaCount); // Pegue o próximo id com base no número atual de vaquinhas
+        return vaquinhaId; // Retorne o ID da nova vakinha
+      }
+    } catch (error) {
+      console.error("Erro ao criar a Vakinha na blockchain:", error);
+      throw error;
     }
+
+    return -1;
   };
 
-  const createVakinhaOnBlockchain = async (nome: string, objetivo: number, duracao: number): Promise<void> => {
-    const tx = await createVaquinha({
-      args: [nome, BigInt(objetivo), BigInt(duracao)],
-      address: contractAddress,
-    });
-  };
-
-  return (
+  // Renderiza o conteúdo apenas se o usuário estiver autenticado
+  return isAuthenticated ? (
     <Container>
       <Header>
-        <Heading>Vakinha Blockchain</Heading>
+        <Heading>MooChain</Heading>
         <Button onClick={() => logout()} secondary>
           Logout
         </Button>
       </Header>
-
       <Section>
         {isConnected ? (
           <SectionContent>
@@ -86,7 +93,6 @@ const Dashboard = ({ contractAddress }: { contractAddress: `0x${string}` }) => {
           <ConnectButton label="Conectar MetaMask" />
         )}
       </Section>
-
       <SearchSection>
         <SearchInput
           type="text"
@@ -95,36 +101,21 @@ const Dashboard = ({ contractAddress }: { contractAddress: `0x${string}` }) => {
           onChange={handleSearchChange}
         />
       </SearchSection>
-
-      <VakinhaList>
-        {filteredVakinhas.length > 0 ? (
-          filteredVakinhas.map((vakinha) => (
-            <VakinhaCard
-              key={vakinha.id}
-              onMouseEnter={() => setHoverCard(vakinha.id)}
-              onMouseLeave={() => setHoverCard(null)}>
-              <VakinhaTitle>{vakinha.nome}</VakinhaTitle>
-              <VakinhaDescription>{vakinha.descricao}</VakinhaDescription>
-              <Button onClick={() => manageVakinha(vakinha.id)}>Gerenciar Vakinha</Button>
-            </VakinhaCard>
-          ))
-        ) : (
-          <p>Nenhuma vakinha encontrada</p>
-        )}
-      </VakinhaList>
-
+      <VakinhaList>{renderAllVakinhas()}</VakinhaList>
       {isModalOpen && (
         <ModalOverlay>
           <CreateVakinhaModal onClose={() => setIsModalOpen(false)} onCreate={createVakinhaOnBlockchain} />
         </ModalOverlay>
       )}
     </Container>
+  ) : (
+    <p>Carregando...</p> // Exibe uma mensagem enquanto o estado de autenticação está sendo verificado
   );
 };
 
 export default Dashboard;
 
-// Paleta de Cores
+// Estilos com styled-components
 const colors = {
   background: "#f0f4f8",
   primary: "#4caf50",
@@ -139,7 +130,6 @@ const colors = {
   buttonSecondaryHover: "#e57373",
 };
 
-// Estilização com styled-components
 const Container = styled.div`
   padding: 20px;
   background-color: ${colors.background};
@@ -228,40 +218,6 @@ const VakinhaList = styled.section`
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 20px;
   justify-content: center;
-`;
-
-const VakinhaCard = styled.div`
-  background-color: ${colors.cardBackground};
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-  cursor: pointer;
-  text-align: center;
-  transition:
-    transform 0.2s,
-    box-shadow 0.2s;
-  &:hover {
-    transform: scale(1.05);
-    box-shadow: 0px 8px 12px rgba(0, 0, 0, 0.2);
-  }
-`;
-
-const VakinhaTitle = styled.h3`
-  font-size: 20px;
-  margin-bottom: 10px;
-  font-weight: bold;
-`;
-
-const VakinhaDescription = styled.p`
-  color: ${colors.text};
-  font-size: 16px;
-  max-height: 40px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  line-height: 1.5;
 `;
 
 const ModalOverlay = styled.div`
