@@ -26,7 +26,7 @@ const ManageVakinha: React.FC<{ contractAddress: `0x${string}` }> = ({ contractA
     address: contractAddress,
     args: [BigInt(vaquinhaId ?? 0)],
   });
-  console.log(vaquinhaData);
+  // console.log(vaquinhaData);
   const nome = vaquinhaData ? vaquinhaData[0] : "Nome não disponível";
   const totalRaised = vaquinhaData ? vaquinhaData[3] : 0; // Saldo arrecadado
   const objective = vaquinhaData ? vaquinhaData[2] : 0n; // Objetivo

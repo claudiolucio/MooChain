@@ -30,7 +30,12 @@ const Dashboard = ({ contractAddress }: { contractAddress: `0x${string}` }) => {
     const vakinhasArray = Array.from({ length: Number(vaquinhaCount) }, (_, i) => i);
 
     return vakinhasArray.map((vaquinhaId) => (
-      <RenderVaquinhasById key={vaquinhaId} vaquinhaId={vaquinhaId} contractAddress={contractAddress} />
+      <RenderVaquinhasById
+        key={vaquinhaId}
+        vaquinhaId={vaquinhaId}
+        contractAddress={contractAddress}
+        searchQuery={searchQuery}
+      />
     ));
   };
 
@@ -109,7 +114,7 @@ const Dashboard = ({ contractAddress }: { contractAddress: `0x${string}` }) => {
       )}
     </Container>
   ) : (
-    <p>Carregando...</p> // Exibe uma mensagem enquanto o estado de autenticação está sendo verificado
+    <p>Carregando...</p>
   );
 };
 
