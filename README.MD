@@ -1,63 +1,60 @@
-# Template para o Ethereum 2024
+# MooChain - Vakinha na Blockchain
 
-[Visite o site](https://esquenta-eth-samba.pages.dev/)
+Este é um projeto de aplicação descentralizada (dApp) chamado MooChain, onde os usuários podem criar e gerenciar vaquinhas na blockchain. Ele utiliza autenticação com o Auth0 para login e o Hardhat como framework para o desenvolvimento de contratos inteligentes.
 
-Este projeto divide-se em duas partes: a primeira é o `hardhat`, que envolve o desenvolvimento do contrato, e a segunda, é o `frontend`, construído usando `React`.
+No dado momento, o projeto está feito de forma a rodar localmente apenas.
 
-A conexão entre essas duas partes é o grande desafio. Para isso, utilizei a biblioteca `wagmi` e o comando `wagmi-cli` para auxiliar nas chamadas ao contrato.
+### Tecnologias Utilizadas
 
-## Hardhat
+1. **React:** Framework para construção da interface de usuário.
+2. **Auth0:** Autenticação de usuários.
+3. **RainbowKit:** Para conectar a carteira MetaMask.
+4. **Hardhat:** Framework para desenvolvimento, teste e implantação de contratos inteligentes.
+5. **Styled-components:** Estilização com CSS-in-JS.
 
-Aqui, temos o template inicial do hardhat. Para realizar o ciclo completo do contrato, basta seguir os seguintes passos:
+## 1. Configurar o Ambiente de Desenvolvimento Local
 
-1. Desenvolver os contratos na pasta `contracts` e, em sequência, construir os testes, que estão localizados na pasta `hardhat/test`. Para executar os testes, basta:
+### Backend (Contratos Inteligentes)
 
-   ```bash
-   npx hardhat test
-   ```
-
-2. Agora, para realizar o deploy do contrato, é necessário definir a rede. Se for a rede local, primeiro certifique-se de que ela está em funcionamento:
-
-   ```bash
-   npx hardhat node
-   ```
-
-   2.1 Em outro terminal, execute o script para realizar o deploy do seu contrato.
-
-   ```bash
-   npx hardhat run scripts/deploy.ts --network localhost
-   ```
-
-   Caso pretenda fazer o deploy em uma rede de testes, não é necessário executar o node localmente. Basta adicionar as variáveis de ambiente `ALCHEMY_API_KEY` e `SEPOLIA_PRIVATE_KEY` no arquivo `.env` e executar:
-
-   ```bash
-   npx hardhat run scripts/deploy.ts --network sepolia
-   ```
-
-3. Também é possível verificar o contrato na rede, através do `etherscan`. Para isso, adicione a chave da API na variável `ETHERSCAN_API_KEY` no arquivo `.env` e, por fim, execute o comando:
-
-   ```bash
-   npx hardhat verify --network sepolia <address> <constructor arguments>
-   ```
-
-## Frontend
-
-Com o `Hardhat` configurado, podemos prosseguir com o desenvolvimento do `Frontend`. O principal componente que realiza a conexão do `frontend` com a blockchain é o `wagmi-cli`. Esta biblioteca está configurada no arquivo `wagmi.config.ts` para procurar pelo projeto do `hardhat`. Assim, é possível gerar os `React Hooks` usando o seguinte comando:
+No terminal, execute
 
 ```bash
-npx wagmi generate
+cd hardhat
+npm install
+npx hardhat node
 ```
 
-Isso gera o arquivo `src/generated.ts`, que contém as chamadas para escrita e leitura do contrato. Estas chamadas são tipadas e oferecem auto-completar.
+No console do Hardhat, serão exibidos vários endereços de carteiras. Copie um ou dois deles para serem, usados no MetaMask.
 
-Por fim, para interagir com o contrato, é necessário adicionar o endereço do mesmo no arquivo `.env`. Atualmente, esse processo é realizado de forma manual.
+### Configuração da Rede MetaMask
 
-## Deploy
+1. Abra o MetaMask no seu navegador.
+2. Vá em "Adicionar Rede".
+3. Configure uma nova rede com os seguintes detalhes:
+   1. URL da RPC: ela será dada na linha de comando junto com os endereços de carteira. Espera-se algo como `http://127.0.0.1:8545/`.
+   2. ID de Cadeia (Chain ID): 31337
+   3. Conecte-se à rede local usando um dos endereços fornecidos pelo Hardhat.
 
-Este site não pretende ser um site dinâmico, mas sim uma web app estática. Para realizar o build e, por fim, o deploy, execute os seguintes comandos:
+### Frontend
+
+_Abra um novo terminal e vá para o diretório frontend:_
 
 ```bash
-npm run build
+cd ../frontend
+npm install
+npm run dev
 ```
 
-Depois, escolha qualquer ferramenta de hosting, como, por exemplo, [Firebase Hosting](https://firebase.google.com/docs/hosting), [Cloudflare Pages](https://pages.cloudflare.com/), ou [Vercel](https://vercel.com).
+## 2. Testando a Aplicação
+
+Com o servidor de desenvolvimento em execução, você pode acessar a aplicação em `http://localhost:3000`. Faça o login com Auth0, conecte sua carteira MetaMask à rede local e comece a criar e gerenciar suas vaquinhas na blockchain.
+
+## 3. Seja felz
+
+Se tudo correu bem, você pode começar a criar vaquinhas ou contribuir com uma já existente com o MooChain!
+
+## Observações
+
+- Certifique-se de que o nó local do Hardhat esteja sempre em execução ao trabalhar com contratos inteligentes.
+
+- Qualquer erro ou comportamento inesperado pode ser devido à falta de sincronização entre o contrato inteligente e a rede local. Certifique-se de que a carteira MetaMask esteja conectada corretamente.

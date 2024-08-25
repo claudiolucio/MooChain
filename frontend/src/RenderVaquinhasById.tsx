@@ -1,21 +1,37 @@
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useReadVaquinhaVaquinhas } from "./generated";
 import styled from "styled-components";
 
-const RenderVaquinhasById = ({ vaquinhaId, contractAddress }: { vaquinhaId: number; contractAddress: string }) => {
+const RenderVaquinhasById = ({
+  vaquinhaId,
+  contractAddress,
+  searchQuery,
+}: {
+  vaquinhaId: number;
+  contractAddress: string;
+  searchQuery: string;
+}) => {
   const { data: vaquinhasFromContract } = useReadVaquinhaVaquinhas({
     address: contractAddress as `0x${string}`,
     args: [BigInt(vaquinhaId)],
   });
 
   const navigate = useNavigate();
+  const [isVisible, setIsVisible] = useState(true);
 
-  if (!vaquinhasFromContract) return <p>Essa vaquinha não foi encontrada</p>;
+  useEffect(() => {
+    if (vaquinhasFromContract) {
+      const nomeVakinha = vaquinhasFromContract[0].toLowerCase();
+      setIsVisible(nomeVakinha.includes(searchQuery.toLowerCase()));
+    }
+  }, [searchQuery, vaquinhasFromContract]);
+
+  if (!vaquinhasFromContract || !isVisible) return null;
 
   // Verifica se a vakinha está ativa ou se o saldo é maior que zero
   const saldo = BigInt(vaquinhasFromContract[4]);
   const ativa = vaquinhasFromContract[7];
-  console.log(vaquinhasFromContract);
 
   if (saldo === 0n && !ativa) {
     return null; // Se a vakinha não tiver saldo ou não estiver ativa, não renderiza
