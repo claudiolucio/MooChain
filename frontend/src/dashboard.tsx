@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
-import { ethers } from "ethers";
-import { useNavigate } from "react-router-dom"; 
+import { useNavigate } from "react-router-dom";
+import {} from "wagmi"; 
 import styled from "styled-components";
 import CreateVakinhaModal from "./CreateVakinhaModal";
 import { useEffect } from "react";
