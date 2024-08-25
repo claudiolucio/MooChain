@@ -4,13 +4,11 @@ import styled from "styled-components";
 import { useAccount } from "wagmi";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import CreateVakinhaModal from "./CreateVakinhaModal";
-import {
-  useReadVaquinhaGetVaquinhaCount,
-  useWriteVaquinhaCreateVaquinha,
-} from "./generated";
+import { useReadVaquinhaGetVaquinhaCount, useWriteVaquinhaCreateVaquinha } from "./generated";
 import { useNavigate } from "react-router-dom";
 import { waitForTransactionReceipt } from "wagmi/actions";
 import { config } from "./wagmi";
+import RenderVaquinhasById from "./RenderVaquinhasById";
 
 const Dashboard = ({ contractAddress }: { contractAddress: `0x${string}` }) => {
   const { logout } = useAuth0();
@@ -32,8 +30,20 @@ const Dashboard = ({ contractAddress }: { contractAddress: `0x${string}` }) => {
   );
 
   const { writeContractAsync: createVaquinha } = useWriteVaquinhaCreateVaquinha();
-  const { data: vaquinhaCount } = useReadVaquinhaGetVaquinhaCount({ address: contractAddress });
-  console.log("vaquinhaCount", vaquinhaCount);
+
+  const renderAllVakinhas = () => {
+    const { data: vaquinhaCount } = useReadVaquinhaGetVaquinhaCount({ address: contractAddress });
+    if (!vaquinhaCount) return <p>Nenhuma vaquinha encontrada</p>;
+    const tempArray = Array.from({ length: Number(vaquinhaCount) }, (_, i) => i);
+
+    return (
+      <>
+        {tempArray.map((vaquinhaId) => (
+          <RenderVaquinhasById key={vaquinhaId} vaquinhaId={vaquinhaId} contractAddress={contractAddress} />
+        ))}
+      </>
+    );
+  };
 
   const navigate = useNavigate();
 
@@ -65,25 +75,22 @@ const Dashboard = ({ contractAddress }: { contractAddress: `0x${string}` }) => {
         args: [nome, BigInt(objetivo), BigInt(duracao)],
         address: contractAddress,
       });
-  
+
       // console.log('Hash da Transação:', txHash);
-  
+
       // Use diretamente o hash retornado para esperar pelo recibo
       const receipt = await waitForTransactionReceipt(config, { hash: txHash });
-  
+
       if (receipt.status === "success") {
         const newVakinha = { id: vakinhaList.length + 1, nome, descricao };
         setVakinhaList((prevList) => [...prevList, newVakinha]);
-        localStorage.setItem('vakinhaList', JSON.stringify([...vakinhaList, newVakinha]));
-        console.log('A vakinha foi criada com sucesso!');
+        localStorage.setItem("vakinhaList", JSON.stringify([...vakinhaList, newVakinha]));
+        console.log("A vakinha foi criada com sucesso!");
       }
     } catch (error) {
-      console.error('Erro ao criar a Vakinha na blockchain:', error);
+      console.error("Erro ao criar a Vakinha na blockchain:", error);
     }
   };
-  
-  
-  
 
   return (
     <Container>
@@ -93,7 +100,6 @@ const Dashboard = ({ contractAddress }: { contractAddress: `0x${string}` }) => {
           Logout
         </Button>
       </Header>
-
       <Section>
         {isConnected ? (
           <SectionContent>
@@ -107,7 +113,6 @@ const Dashboard = ({ contractAddress }: { contractAddress: `0x${string}` }) => {
           <ConnectButton label="Conectar MetaMask" />
         )}
       </Section>
-
       <SearchSection>
         <SearchInput
           type="text"
@@ -116,7 +121,7 @@ const Dashboard = ({ contractAddress }: { contractAddress: `0x${string}` }) => {
           onChange={handleSearchChange}
         />
       </SearchSection>
-
+      {renderAllVakinhas()}
       <VakinhaList>
         {filteredVakinhas.length > 0 ? (
           filteredVakinhas.map((vakinha) => (
@@ -133,7 +138,6 @@ const Dashboard = ({ contractAddress }: { contractAddress: `0x${string}` }) => {
           <p>Nenhuma vakinha encontrada</p>
         )}
       </VakinhaList>
-
       {isModalOpen && (
         <ModalOverlay>
           <CreateVakinhaModal onClose={() => setIsModalOpen(false)} onCreate={createVakinhaOnBlockchain} />

@@ -1,51 +1,37 @@
 import React, { useState } from "react";
-import { useAccount, useReadContract, useSimulateContract } from "wagmi";
+import { useAccount } from "wagmi";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import styled from "styled-components";
-import {
-  useReadVaquinhaGetVaquinha,
-  useWriteVaquinhaWithdraw,
-  useWriteVaquinhaContribute,
-} from "./generated";
+import { useReadVaquinhaGetVaquinha, useWriteVaquinhaWithdraw, useWriteVaquinhaContribute } from "./generated";
+import { formatEther } from "viem";
 
 const ManageVakinha: React.FC<{ contractAddress: `0x${string}` }> = ({ contractAddress }) => {
   const { vaquinhaId } = useParams();
-  const { address: userAddress } = useAccount();
+  const { address: userAddress, chainId } = useAccount();
   const { state } = useLocation();
-  
+
   // Adicionando log para verificar o estado recebido
   console.log("Estado recebido na navegação:", state);
 
   const descricao = state?.descricao || "Descrição não disponível";
-  const [donationAmount, setDonationAmount] = useState<string>(""); // Estado para armazenar o valor da doação
+  const [donationAmount, setDonationAmount] = useState<string>("");
 
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const navigate = useNavigate();
 
-  // Lê o endereço do criador da vakinha
-  const { data: creatorAddress } = useReadContract({
-    address: contractAddress,
-    abi: vaquinhaAbi,
-    functionName: "getCreator",
-    args: [BigInt(vaquinhaId ?? 0)],
-  });
-
-  // Lê as informações da Vakinha (incluindo o saldo)
+  // Lê as informações da Vakinha
   const { data: vaquinhaData } = useReadVaquinhaGetVaquinha({
     address: contractAddress,
     args: [BigInt(vaquinhaId ?? 0)],
   });
 
-  const totalRaised = vaquinhaData ? vaquinhaData[3] : 0; // Índice 3 no retorno é o saldo da vakinha
+  console.log("vaquinhaId:", vaquinhaId ?? 0);
+  console.log("Endereço do contrato:", contractAddress);
+  console.log("Dados da vakinha:", vaquinhaData);
 
-  // Simula a execução da função withdraw
-  const { data: simulationData } = useSimulateContract({
-    address: contractAddress as `0x${string}`,
-    abi: vaquinhaAbi,
-    functionName: "withdraw",
-    args: [BigInt(vaquinhaId ?? 0)],
-  });
+  const totalRaised = vaquinhaData ? vaquinhaData[3] : 0; // Índice 3 é o saldo da vakinha
+  const creatorAddress = vaquinhaData ? vaquinhaData[1] : ""; // Índice 1 é o criador
 
   const { writeContractAsync: withdraw } = useWriteVaquinhaWithdraw();
   const { writeContractAsync: contribute } = useWriteVaquinhaContribute();
@@ -55,18 +41,16 @@ const ManageVakinha: React.FC<{ contractAddress: `0x${string}` }> = ({ contractA
   }
 
   const handleWithdraw = async () => {
-    if (!simulationData?.request) {
-      setErrorMessage("Falha na simulação ou dados ausentes.");
-      return;
-    }
-
-    if (typeof creatorAddress === "string" && creatorAddress.toLowerCase() !== userAddress?.toLowerCase()) {
+    if (creatorAddress.toLowerCase() !== userAddress?.toLowerCase()) {
       setErrorMessage("Você não tem permissão para sacar desta Vakinha.");
       return;
     }
 
     try {
-      withdraw({ address: contractAddress, args: [BigInt(vaquinhaId)] });
+      await withdraw({
+        address: contractAddress,
+        args: [BigInt(vaquinhaId)],
+      });
       setSuccessMessage("Saque realizado com sucesso!");
       setErrorMessage(null);
     } catch (error) {
@@ -89,6 +73,7 @@ const ManageVakinha: React.FC<{ contractAddress: `0x${string}` }> = ({ contractA
       });
       setSuccessMessage("Doação realizada com sucesso!");
       setErrorMessage(null);
+      console.log("saldo da vaquinha", Number(totalRaised));
     } catch (error) {
       setErrorMessage("Falha ao realizar doação: " + (error as Error).message);
       setSuccessMessage(null);
@@ -99,7 +84,7 @@ const ManageVakinha: React.FC<{ contractAddress: `0x${string}` }> = ({ contractA
     navigate(-1);
   };
 
-  const isCreator = typeof creatorAddress === "string" && creatorAddress.toLowerCase() === userAddress?.toLowerCase();
+  const isCreator = creatorAddress.toLowerCase() === userAddress?.toLowerCase();
 
   return (
     <Container>
@@ -109,9 +94,17 @@ const ManageVakinha: React.FC<{ contractAddress: `0x${string}` }> = ({ contractA
       <Card>
         <BackButton onClick={handleBack}>Voltar</BackButton>
         <CardTitle>Sua Vakinha: {vaquinhaId}</CardTitle>
-        {typeof creatorAddress === "string" && <p>Endereço do Criador: {creatorAddress}</p>}
-        <p><strong>Descrição:</strong> {descricao}</p>
-        <p><strong>Valor Arrecadado:</strong> {Number(totalRaised) / 1e18} ETH</p>
+        <p>{contractAddress}</p>
+        <p>
+          <strong>Endereço do Criador:</strong> {creatorAddress}
+        </p>
+        <p>chainId: {chainId}</p>
+        <p>
+          <strong>Descrição:</strong> {descricao}
+        </p>
+        <p>
+          <strong>Valor Arrecadado:</strong> {formatEther(BigInt(totalRaised))} ETH
+        </p>
         {isCreator ? (
           <Button onClick={handleWithdraw}>Sacar</Button>
         ) : (

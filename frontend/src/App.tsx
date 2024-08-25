@@ -6,11 +6,11 @@ import ManageVakinha from "./manageVakinha";
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <Dashboard contractAddress="0x5fbdb2315678afecb367f032d93f642f64180aa3" />,
+    element: <Dashboard contractAddress="0x9eBb49B2004C753f6Fb8b3181C224a8972f70528" />,
   },
   {
     path: "/manage-vakinha/:vaquinhaId",
-    element: <ManageVakinha contractAddress="0x5fbdb2315678afecb367f032d93f642f64180aa3"/>,
+    element: <ManageVakinha contractAddress="0x9eBb49B2004C753f6Fb8b3181C224a8972f70528" />,
   },
 ]);
 
