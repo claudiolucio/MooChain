@@ -2,18 +2,20 @@ import React, { useState } from "react";
 import { useAccount } from "wagmi";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import styled from "styled-components";
-import { useReadVaquinhaGetVaquinha, useWriteVaquinhaWithdraw, useWriteVaquinhaContribute } from "./generated";
+import {
+  useReadVaquinhaGetVaquinha,
+  useWriteVaquinhaWithdraw,
+  useWriteVaquinhaContribute,
+  useWriteVaquinhaDeleteVaquinha,
+} from "./generated";
 import { formatEther } from "viem";
 
 const ManageVakinha: React.FC<{ contractAddress: `0x${string}` }> = ({ contractAddress }) => {
   const { vaquinhaId } = useParams();
-  const { address: userAddress, chainId } = useAccount();
-  const { state } = useLocation();
+  const { address: userAddress } = useAccount();
+  const { state } = useLocation(); // Pega o estado da navegação
 
-  // Adicionando log para verificar o estado recebido
-  console.log("Estado recebido na navegação:", state);
-
-  const descricao = state?.descricao || "Descrição não disponível";
+  const descricao = state?.descricao || "Descrição não disponível"; // Acessa a descrição do estado
   const [donationAmount, setDonationAmount] = useState<string>("");
 
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -26,19 +28,43 @@ const ManageVakinha: React.FC<{ contractAddress: `0x${string}` }> = ({ contractA
     args: [BigInt(vaquinhaId ?? 0)],
   });
 
-  console.log("vaquinhaId:", vaquinhaId ?? 0);
-  console.log("Endereço do contrato:", contractAddress);
-  console.log("Dados da vakinha:", vaquinhaData);
+  const nome = vaquinhaData ? vaquinhaData[0] : "Nome não disponível";
+  const totalRaised = vaquinhaData ? vaquinhaData[3] : 0; // Saldo arrecadado
+  const objective = vaquinhaData ? vaquinhaData[2] : 0; // Objetivo
+  const creatorAddress = vaquinhaData ? vaquinhaData[1] : ""; // Criador
 
-  const totalRaised = vaquinhaData ? vaquinhaData[3] : 0; // Índice 3 é o saldo da vakinha
-  const creatorAddress = vaquinhaData ? vaquinhaData[1] : ""; // Índice 1 é o criador
+  const percentageRaised = objective ? (Number(totalRaised) / Number(objective)) * 100 : 0;
 
   const { writeContractAsync: withdraw } = useWriteVaquinhaWithdraw();
   const { writeContractAsync: contribute } = useWriteVaquinhaContribute();
+  const { writeContractAsync: deleteVaquinha } = useWriteVaquinhaDeleteVaquinha();
 
   if (!vaquinhaId) {
-    return <p>Nenhuma vaquinha encontrada</p>;
+    return <p>Nenhuma vakinha encontrada</p>;
   }
+
+  const handleDelete = async () => {
+    if (creatorAddress.toLowerCase() !== userAddress?.toLowerCase()) {
+      setErrorMessage("Você não tem permissão para deletar esta Vakinha.");
+      return;
+    }
+
+    if (totalRaised > 0) {
+      setErrorMessage("Não é possível deletar uma vakinha com saldo.");
+      return;
+    }
+
+    try {
+      const result = await deleteVaquinha({ address: contractAddress, args: [BigInt(vaquinhaId)] });
+      if (result) {
+        setSuccessMessage("Vakinha deletada com sucesso!");
+        navigate(-1); // Volta para a página anterior
+      }
+    } catch (error) {
+      setErrorMessage("Falha ao deletar a Vakinha: " + (error as Error).message);
+      setSuccessMessage(null);
+    }
+  };
 
   const handleWithdraw = async () => {
     if (creatorAddress.toLowerCase() !== userAddress?.toLowerCase()) {
@@ -47,10 +73,7 @@ const ManageVakinha: React.FC<{ contractAddress: `0x${string}` }> = ({ contractA
     }
 
     try {
-      await withdraw({
-        address: contractAddress,
-        args: [BigInt(vaquinhaId)],
-      });
+      await withdraw({ address: contractAddress, args: [BigInt(vaquinhaId)] });
       setSuccessMessage("Saque realizado com sucesso!");
       setErrorMessage(null);
     } catch (error) {
@@ -60,6 +83,11 @@ const ManageVakinha: React.FC<{ contractAddress: `0x${string}` }> = ({ contractA
   };
 
   const handleDonate = async () => {
+    if (percentageRaised >= 100) {
+      setErrorMessage("A meta já foi alcançada. Não é possível doar.");
+      return;
+    }
+
     if (!donationAmount || isNaN(Number(donationAmount))) {
       setErrorMessage("Por favor, insira um valor válido para doar.");
       return;
@@ -73,7 +101,6 @@ const ManageVakinha: React.FC<{ contractAddress: `0x${string}` }> = ({ contractA
       });
       setSuccessMessage("Doação realizada com sucesso!");
       setErrorMessage(null);
-      console.log("saldo da vaquinha", Number(totalRaised));
     } catch (error) {
       setErrorMessage("Falha ao realizar doação: " + (error as Error).message);
       setSuccessMessage(null);
@@ -93,34 +120,45 @@ const ManageVakinha: React.FC<{ contractAddress: `0x${string}` }> = ({ contractA
       </Header>
       <Card>
         <BackButton onClick={handleBack}>Voltar</BackButton>
-        <CardTitle>Sua Vakinha: {vaquinhaId}</CardTitle>
-        <p>{contractAddress}</p>
-        <p>
-          <strong>Endereço do Criador:</strong> {creatorAddress}
-        </p>
-        <p>chainId: {chainId}</p>
-        <p>
-          <strong>Descrição:</strong> {descricao}
-        </p>
-        <p>
-          <strong>Valor Arrecadado:</strong> {formatEther(BigInt(totalRaised))} ETH
-        </p>
+        <CardTitle>{nome}</CardTitle> {/* Usa o nome da vakinha */}
+        <DetailItem>
+          <DetailLabel>Descrição:</DetailLabel> {descricao}
+        </DetailItem>{" "}
+        {/* Exibe a descrição da vakinha */}
+        <Divider />
+        <Details>
+          <DetailItem>
+            <DetailLabel>Endereço do Criador:</DetailLabel> {creatorAddress}
+          </DetailItem>
+          <DetailItem>
+            <DetailLabel>Objetivo:</DetailLabel> {formatEther(BigInt(objective))} ETH
+          </DetailItem>
+          <DetailItem>
+            <DetailLabel>Valor Arrecadado:</DetailLabel> {formatEther(BigInt(totalRaised))} ETH
+          </DetailItem>
+          <DetailItem>
+            <DetailLabel>Porcentagem Arrecadada:</DetailLabel> {percentageRaised.toFixed(2)}%
+          </DetailItem>
+        </Details>
+        <Divider />
         {isCreator ? (
-          <Button onClick={handleWithdraw}>Sacar</Button>
-        ) : (
           <>
-            <input
+            <ActionButton onClick={handleWithdraw}>Sacar</ActionButton>
+            {percentageRaised <= 0 && <ActionButton onClick={handleDelete}>Excluir Vakinha</ActionButton>}
+          </>
+        ) : (
+          <DonationSection>
+            <DonationInput
               type="number"
               placeholder="Valor a doar (ETH)"
               value={donationAmount}
               onChange={(e) => setDonationAmount(e.target.value)}
-              style={styles.input}
             />
-            <Button onClick={handleDonate}>Doar</Button>
-          </>
+            <ActionButton onClick={handleDonate}>Doar</ActionButton>
+          </DonationSection>
         )}
-        {errorMessage && <ErrorMessage>{errorMessage}</ErrorMessage>}
-        {successMessage && <SuccessMessage>{successMessage}</SuccessMessage>}
+        {errorMessage && <Message error>{errorMessage}</Message>}
+        {successMessage && <Message success>{successMessage}</Message>}
       </Card>
     </Container>
   );
@@ -130,7 +168,7 @@ export default ManageVakinha;
 
 // Estilizações com styled-components
 const colors = {
-  background: "#f0f4f8",
+  background: "#f9fafc",
   primary: "#4caf50",
   secondary: "#388e3c",
   text: "#333",
@@ -140,25 +178,6 @@ const colors = {
   hover: "#66bb6a",
   darkBackground: "#2c3e50",
 };
-
-const Header = styled.header`
-  width: 100%;
-  max-width: 800px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-bottom: 20px;
-  padding: 10px 20px;
-  background-color: ${colors.darkBackground};
-  border-radius: 8px;
-  color: ${colors.lightText};
-`;
-
-const Heading = styled.h1`
-  margin: 0;
-  font-size: 24px;
-  font-weight: bold;
-`;
 
 const Container = styled.div`
   padding: 20px;
@@ -170,98 +189,116 @@ const Container = styled.div`
   align-items: center;
 `;
 
+const Header = styled.header`
+  width: 100%;
+  max-width: 800px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 20px;
+  padding: 10px 20px;
+  background-color: ${colors.darkBackground};
+  border-radius: 12px;
+  color: ${colors.lightText};
+`;
+
+const Heading = styled.h1`
+  margin: 0;
+  font-size: 24px;
+  font-weight: bold;
+`;
+
 const Card = styled.div`
   background-color: ${colors.cardBackground};
   border: 1px solid ${colors.border};
-  border-radius: 8px;
+  border-radius: 12px;
   padding: 20px;
   width: 100%;
-  max-width: 400px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  max-width: 450px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
   margin-bottom: 20px;
   position: relative;
 `;
 
 const CardTitle = styled.h2`
-  margin-top: 0;
-  font-size: 18px;
+  margin: 0 0 10px;
+  font-size: 20px;
   color: ${colors.text};
+  text-align: center;
 `;
 
-const Button = styled.button`
-  padding: 10px 20px;
+const Divider = styled.hr`
+  border: none;
+  border-top: 1px solid ${colors.border};
+  margin: 20px 0;
+`;
+
+const Details = styled.div`
+  font-size: 16px;
+  color: ${colors.text};
+  margin-bottom: 20px;
+`;
+
+const DetailItem = styled.p`
+  margin: 8px 0;
+`;
+
+const DetailLabel = styled.span`
+  font-weight: bold;
+`;
+
+const ActionButton = styled.button`
+  padding: 12px 24px;
   background-color: ${colors.primary};
   color: ${colors.lightText};
   border: none;
-  border-radius: 4px;
+  border-radius: 8px;
+  font-size: 16px;
   cursor: pointer;
-  font-size: 14px;
   transition: background-color 0.3s;
+  display: block;
+  width: 100%;
+  text-align: center;
   &:hover {
     background-color: ${colors.hover};
   }
 `;
 
+const DonationSection = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Alinha o conteúdo no centro horizontalmente */
+  gap: 10px;
+`;
+
+const DonationInput = styled.input`
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid ${colors.border};
+  font-size: 16px;
+  width: 94%;
+`;
+
 const BackButton = styled.button`
   position: absolute;
   top: 10px;
-  right: 10px;
+  left: 10px;
   padding: 10px 20px;
-  background-color: cyan;
+  background-color: #388e3c;
   color: ${colors.lightText};
   border: none;
-  border-radius: 4px;
+  border-radius: 8px;
   cursor: pointer;
   font-size: 16px;
   transition: background-color 0.3s;
   &:hover {
-    background-color: blue;
+    background-color: #66bb6a;
   }
 `;
 
-const ErrorMessage = styled.p`
-  color: red;
-  font-size: 16px;
+const Message = styled.p<{ error?: boolean; success?: boolean }>`
   margin-top: 20px;
-`;
-
-const SuccessMessage = styled.p`
-  color: green;
   font-size: 16px;
-  margin-top: 20px;
+  color: ${({ error, success }) => (error ? "red" : success ? "green" : colors.text)};
+  text-align: center;
 `;
-
-const styles = {
-  input: {
-    width: "100%",
-    padding: "10px",
-    margin: "10px 0",
-    borderRadius: "4px",
-    border: "1px solid #e0e0e0",
-    fontSize: "14px",
-  },
-};
-
-export const vaquinhaAbi = [
-  {
-    type: "function",
-    name: "withdraw",
-    stateMutability: "nonpayable",
-    inputs: [{ name: "vaquinhaId", type: "uint256" }],
-    outputs: [],
-  },
-  {
-    type: "function",
-    name: "getCreator",
-    stateMutability: "view",
-    inputs: [{ name: "vaquinhaId", type: "uint256" }],
-    outputs: [{ type: "address" }],
-  },
-  {
-    type: "function",
-    name: "getTotalRaised",
-    stateMutability: "view",
-    inputs: [{ name: "vaquinhaId", type: "uint256" }],
-    outputs: [{ type: "uint256" }],
-  },
-] as const;
