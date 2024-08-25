@@ -23,7 +23,7 @@ const LoginPage = () => {
       {!isAuthenticated ? (
         <Box>
           <Logo src={logo} alt="Logo MooCow" />
-          <Heading>MooCow</Heading>
+          <Heading>MooChain</Heading>
           <SubHeading>Sua vakinha na blockchain</SubHeading>
           <Button onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave} onClick={() => loginWithRedirect()}>
             Começar
